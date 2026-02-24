@@ -26,6 +26,34 @@ const validateColumns = (data: any[], required: string[]) => {
   return missing.length === 0;
 };
 
+const formatDateValue = (dateValue: any): string => {
+  if (!dateValue) return '';
+
+  if (typeof dateValue === 'number') {
+    const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+    const date = new Date(excelEpoch.getTime() + dateValue * 24 * 60 * 60 * 1000);
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    }
+  }
+
+  const dateStr = String(dateValue);
+  const parts = dateStr.split('/');
+  if (parts.length === 3) {
+    const day = parts[0].padStart(2, '0');
+    const month = parts[1].padStart(2, '0');
+    const year = parts[2];
+    return `${day}/${month}/${year}`;
+  }
+  
+  const d = new Date(dateStr);
+  if (!isNaN(d.getTime())) {
+    return d.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  }
+
+  return dateStr;
+};
+
 export const processFileBuffer = (
   buffer: ArrayBuffer, 
   fileName: string, 
@@ -187,8 +215,12 @@ export const processFileBuffer = (
       else if (rowType === 'cancelled') cancelledRowsBatch.push(enrichedRow);
       else if (rowType === 'income') incomeRowsBatch.push(enrichedRow);
       else if (rowType === 'my-balance') myBalanceRowsBatch.push(enrichedRow);
-      else if (rowType === 'adwords-bill') adwordsBillRowsBatch.push(enrichedRow);
-      else orderAllRowsBatch.push(enrichedRow);
+      if (rowType === 'adwords-bill') {
+        enrichedRow['Waktu'] = formatDateValue(enrichedRow['Waktu']);
+        adwordsBillRowsBatch.push(enrichedRow);
+      } else {
+        orderAllRowsBatch.push(enrichedRow);
+      }
     }
   });
 
