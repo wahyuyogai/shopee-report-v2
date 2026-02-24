@@ -112,7 +112,7 @@ export const processFileBuffer = (
   
   if (!sheetName) return false;
 
-  const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], readOpts);
+  const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { ...readOpts, raw: true });
   if (rawData.length === 0) return false;
 
   // --- DETECT EXISTING STATUS ---
