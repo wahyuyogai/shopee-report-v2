@@ -347,12 +347,13 @@ export default function DashboardPage() {
         
         let d;
         if (adSpendMode === 'gmv-max') {
-            const parts = valToCheck.split('/');
+            const dateStr = String(valToCheck);
+            const parts = dateStr.split('/');
             if (parts.length === 3) {
                 // DD/MM/YYYY to YYYY-MM-DD
                 d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
             } else {
-                d = new Date(valToCheck);
+                d = new Date(dateStr);
             }
         } else {
             d = new Date(valToCheck);
@@ -365,7 +366,7 @@ export default function DashboardPage() {
 
     adSourceData.forEach(row => {
       let dateStr;
-      const rawDate = adSpendMode === 'top-up' ? row['Tanggal Transaksi'] : row['Waktu'];
+      const rawDate = adSpendMode === 'top-up' ? row['Tanggal Transaksi'] : String(row['Waktu']);
       if(adSpendMode === 'gmv-max') {
         const parts = rawDate.split('/');
         if(parts.length === 3) {
