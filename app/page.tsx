@@ -173,6 +173,8 @@ export default function DashboardPage() {
     orderStatus: [] as string[],
   });
 
+  const [hasInitializedOrderStatus, setHasInitializedOrderStatus] = useState(false);
+
   // -- DATE FILTER STATE --
   const [dateFilter, setDateFilter] = useState({
     column: '',
@@ -360,6 +362,16 @@ export default function DashboardPage() {
       orderStatus: Array.from(orderStatuses).sort(),
     };
   }, [rawData]);
+
+  React.useEffect(() => {
+    if (!hasInitializedOrderStatus && filterOptions.orderStatus.length > 0) {
+      setFilters(prev => ({
+        ...prev,
+        orderStatus: filterOptions.orderStatus.filter(status => status !== 'Batal')
+      }));
+      setHasInitializedOrderStatus(true);
+    }
+  }, [filterOptions.orderStatus, hasInitializedOrderStatus]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-1000 relative pb-10">
