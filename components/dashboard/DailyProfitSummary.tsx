@@ -52,6 +52,10 @@ export const DailyProfitSummary: React.FC<DailyProfitSummaryProps> = ({ data, is
       )
   }
 
+  const totalEstimasiProfit = data.reduce((sum, item) => sum + item.estimasiProfit, 0);
+  const totalJumlahBiayaIklan = data.reduce((sum, item) => sum + item.jumlahBiayaIklan, 0);
+  const totalEstProfitBersih = data.reduce((sum, item) => sum + item.estProfitBersih, 0);
+
   return (
     <div className="bg-surface rounded-2xl shadow-xl border border-border overflow-hidden mb-6">
         <div className="p-4 md:p-6">
@@ -83,6 +87,21 @@ export const DailyProfitSummary: React.FC<DailyProfitSummaryProps> = ({ data, is
                             </tr>
                         ))}
                     </tbody>
+                    <tfoot className="bg-surface sticky bottom-0 border-t-2 border-border font-bold text-text-main">
+                        <tr>
+                            <td className="px-4 py-3">Total</td>
+                            <td className="px-4 py-3 text-right">{formatCurrency(totalEstimasiProfit)}</td>
+                            <td className="px-4 py-3 text-right text-red-500">{formatCurrency(totalJumlahBiayaIklan)}</td>
+                            <td className={`px-4 py-3 text-right ${totalEstProfitBersih >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                <div className="flex items-center justify-end gap-1">
+                                    {totalEstProfitBersih > 0 && <TrendingUp size={14} />}
+                                    {totalEstProfitBersih < 0 && <TrendingDown size={14} />}
+                                    {totalEstProfitBersih === 0 && <Minus size={14} />}
+                                    <span>{formatCurrency(totalEstProfitBersih)}</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
