@@ -221,8 +221,12 @@ export default function DashboardPage() {
   }, [activeTab, orderAllReports, skuMap, feeToggles]);
 
   const isiUlangSaldoData = useMemo(() => {
-    const filtered = myBalanceReports.flatMap((report: any) => report.data)
+    let filtered = myBalanceReports.flatMap((report: any) => report.data)
       .filter((row: any) => row['Deskripsi'] === 'Isi Ulang Saldo Iklan/Koin Penjual');
+
+    if (filters.toko) {
+      filtered = filtered.filter((row: any) => row['Nama Toko'] === filters.toko);
+    }
 
     // Sort by 'Tanggal Transaksi' ascending (older first)
     return filtered.sort((a, b) => {
@@ -231,7 +235,7 @@ export default function DashboardPage() {
       const dateB = new Date(b['Tanggal Transaksi']);
       return dateA.getTime() - dateB.getTime();
     });
-  }, [myBalanceReports]);
+  }, [myBalanceReports, filters.toko]);
 
   // Apply Filters
   const filteredData = useMemo(() => {
