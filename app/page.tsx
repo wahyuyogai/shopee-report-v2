@@ -202,8 +202,15 @@ export default function DashboardPage() {
   }, [activeTab, orderAllReports, skuMap]);
 
   const isiUlangSaldoData = useMemo(() => {
-    return myBalanceReports.flatMap((report: any) => report.data)
+    const filtered = myBalanceReports.flatMap((report: any) => report.data)
       .filter((row: any) => row['Deskripsi'] === 'Isi Ulang Saldo Iklan/Koin Penjual');
+
+    // Sort by 'Tanggal Transaksi' ascending (older first)
+    return filtered.sort((a, b) => {
+      const dateA = new Date(a['Tanggal Transaksi'].split('-').reverse().join('-'));
+      const dateB = new Date(b['Tanggal Transaksi'].split('-').reverse().join('-'));
+      return dateA.getTime() - dateB.getTime();
+    });
   }, [myBalanceReports]);
 
   // Apply Filters
