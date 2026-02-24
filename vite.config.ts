@@ -1,0 +1,1 @@
+// This file is deleted as the project uses Next.js
