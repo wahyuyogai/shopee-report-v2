@@ -233,7 +233,7 @@ export default function DashboardPage() {
     isiUlangSaldoData.forEach(row => {
       const dateStr = row['Tanggal Transaksi']?.split(' ')[0];
       if (dateStr) {
-        const spendStr = row['Jumlah'] || '0';
+        const spendStr = String(row['Jumlah'] || '0');
         const spend = parseFloat(spendStr.replace(/[^0-9-]/g, '')) || 0;
         adSpendByDate.set(dateStr, (adSpendByDate.get(dateStr) || 0) + spend);
       }
