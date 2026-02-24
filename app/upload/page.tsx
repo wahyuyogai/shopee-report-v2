@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { Loader2, CheckCircle2, FileArchive, PackageCheck, Save, AlertTriangle, AlertOctagon, RotateCcw, Lock, ChevronDown, Settings2, Info, XCircle, FileText, TrendingUp, Wallet } from 'lucide-react';
+import { Loader2, CheckCircle2, FileArchive, PackageCheck, Save, AlertTriangle, AlertOctagon, RotateCcw, Lock, ChevronDown, Settings2, Info, XCircle, FileText, TrendingUp, Wallet, Megaphone } from 'lucide-react';
 import JSZip from 'jszip';
 import * as XLSX from 'xlsx';
 import { useData } from '../../components/DataProvider';
@@ -16,7 +16,7 @@ import { useAuth } from '../../components/AuthProvider';
 import { useRouter } from 'next/navigation';
 
 export default function UploadPage() {
-  const { failedDeliveryReports, returnRefundReports, cancelledReports, orderAllReports, incomeReports, myBalanceReports, addFailedDeliveryReport, addReturnRefundReport, addCancelledReport, addOrderAllReport, addIncomeReport, addMyBalanceReport, addLog } = useData();
+  const { failedDeliveryReports, returnRefundReports, cancelledReports, orderAllReports, incomeReports, myBalanceReports, adwordsBillReports, addFailedDeliveryReport, addReturnRefundReport, addCancelledReport, addOrderAllReport, addIncomeReport, addMyBalanceReport, addAdwordsBillReport, addLog } = useData();
   const { showToast } = useUI();
   const { role } = useAuth();
   const router = useRouter();
@@ -60,6 +60,7 @@ export default function UploadPage() {
     const orderAll = new Set<string>();
     const income = new Set<string>();
     const myBalance = new Set<string>();
+    const adwordsBill = new Set<string>();
 
     failedDeliveryReports.forEach(r => r.data.forEach(row => failed.add(generateUniqueKey(row, 'failed'))));
     returnRefundReports.forEach(r => r.data.forEach(row => returned.add(generateUniqueKey(row, 'return'))));
@@ -67,9 +68,10 @@ export default function UploadPage() {
     orderAllReports.forEach(r => r.data.forEach(row => orderAll.add(generateUniqueKey(row, 'order-all'))));
     incomeReports.forEach(r => r.data.forEach(row => income.add(generateUniqueKey(row, 'income'))));
     myBalanceReports.forEach(r => r.data.forEach(row => myBalance.add(generateUniqueKey(row, 'my-balance'))));
+    adwordsBillReports.forEach(r => r.data.forEach(row => adwordsBill.add(generateUniqueKey(row, 'adwords-bill'))));
 
-    return { failed, returned, cancelled, orderAll, income, myBalance };
-  }, [failedDeliveryReports, returnRefundReports, cancelledReports, orderAllReports, incomeReports, myBalanceReports]);
+    return { failed, returned, cancelled, orderAll, income, myBalance, adwordsBill };
+  }, [failedDeliveryReports, returnRefundReports, cancelledReports, orderAllReports, incomeReports, myBalanceReports, adwordsBillReports]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -90,6 +92,7 @@ export default function UploadPage() {
       orderAll: { newRows: [], duplicateRows: [] },
       income: { newRows: [], duplicateRows: [] },
       myBalance: { newRows: [], duplicateRows: [] },
+      adwordsBill: { newRows: [], duplicateRows: [] },
       reportsToSave: []
     };
 
@@ -141,8 +144,8 @@ export default function UploadPage() {
         filesProcessed++;
       }
 
-      const totalNew = tempResults.failed.newRows.length + tempResults.returned.newRows.length + tempResults.cancelled.newRows.length + tempResults.orderAll.newRows.length + tempResults.income.newRows.length + tempResults.myBalance.newRows.length;
-      const totalDup = tempResults.failed.duplicateRows.length + tempResults.returned.duplicateRows.length + tempResults.cancelled.duplicateRows.length + tempResults.orderAll.duplicateRows.length + tempResults.income.duplicateRows.length + tempResults.myBalance.duplicateRows.length;
+      const totalNew = tempResults.failed.newRows.length + tempResults.returned.newRows.length + tempResults.cancelled.newRows.length + tempResults.orderAll.newRows.length + tempResults.income.newRows.length + tempResults.myBalance.newRows.length + tempResults.adwordsBill.newRows.length;
+      const totalDup = tempResults.failed.duplicateRows.length + tempResults.returned.duplicateRows.length + tempResults.cancelled.duplicateRows.length + tempResults.orderAll.duplicateRows.length + tempResults.income.duplicateRows.length + tempResults.myBalance.duplicateRows.length + tempResults.adwordsBill.duplicateRows.length;
 
       if (totalNew === 0 && totalDup === 0) {
         throw new Error('Tidak ditemukan data valid. Pastikan format kolom sesuai Template Shopee atau File Export Dashboard.');
@@ -180,6 +183,7 @@ export default function UploadPage() {
       let orderAllCount = 0;
       let incomeCount = 0;
       let myBalanceCount = 0;
+      let adwordsBillCount = 0;
 
       for (const report of previewData.reportsToSave) {
         const updatedData = report.data.map(row => {
@@ -213,11 +217,14 @@ export default function UploadPage() {
         } else if (reportToSave.jenisLaporan === 'MyBalance') {
           await addMyBalanceReport(reportToSave);
           myBalanceCount++;
+        } else if (reportToSave.jenisLaporan === 'Adwords Bill') {
+          await addAdwordsBillReport(reportToSave);
+          adwordsBillCount++;
         }
       }
 
       const statusMsg = isStatusLocked ? 'Status dari File' : targetStatus;
-      const total = failedCount + returnCount + cancelledCount + orderAllCount + incomeCount + myBalanceCount;
+      const total = failedCount + returnCount + cancelledCount + orderAllCount + incomeCount + myBalanceCount + adwordsBillCount;
       const msg = `Berhasil menyimpan ${total} laporan baru ke database (Status: ${statusMsg}).`;
       showToast('success', 'Data Tersimpan', msg);
       addLog('success', 'Data Saved', msg);
@@ -248,8 +255,8 @@ export default function UploadPage() {
     showToast('success', 'Export Berhasil', 'File Excel telah diunduh.');
   };
 
-  const totalNewRows = previewData ? previewData.failed.newRows.length + previewData.returned.newRows.length + previewData.cancelled.newRows.length + previewData.orderAll.newRows.length + previewData.income.newRows.length + previewData.myBalance.newRows.length : 0;
-  const totalDuplicateRows = previewData ? previewData.failed.duplicateRows.length + previewData.returned.duplicateRows.length + previewData.cancelled.duplicateRows.length + previewData.orderAll.duplicateRows.length + previewData.income.duplicateRows.length + previewData.myBalance.duplicateRows.length : 0;
+  const totalNewRows = previewData ? previewData.failed.newRows.length + previewData.returned.newRows.length + previewData.cancelled.newRows.length + previewData.orderAll.newRows.length + previewData.income.newRows.length + previewData.myBalance.newRows.length + previewData.adwordsBill.newRows.length : 0;
+  const totalDuplicateRows = previewData ? previewData.failed.duplicateRows.length + previewData.returned.duplicateRows.length + previewData.cancelled.duplicateRows.length + previewData.orderAll.duplicateRows.length + previewData.income.duplicateRows.length + previewData.myBalance.duplicateRows.length + previewData.adwordsBill.duplicateRows.length : 0;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-6xl mx-auto">
@@ -312,6 +319,10 @@ export default function UploadPage() {
                             <span className="w-20 font-bold text-brand text-right">MyBalance:</span> 
                             <span className="font-mono bg-app px-1 rounded">my_balance...xlsx</span>
                          </p>
+                         <p className="flex items-center gap-2">
+                            <span className="w-20 font-bold text-brand text-right">Adwords:</span> 
+                            <span className="font-mono bg-app px-1 rounded">adwords_bill...xlsx</span>
+                         </p>
                          <p className="text-[10px] text-emerald-600 italic mt-1 pt-1 border-t border-border/50 text-center font-medium">
                             *Mendukung re-upload file hasil export dashboard.
                          </p>
@@ -333,7 +344,7 @@ export default function UploadPage() {
                    <h3>Smart Detection</h3>
                 </div>
                 <p className="text-xs text-text-muted leading-relaxed">
-                   Otomatis mengenali file Raw Shopee, Order.all, Income, MyBalance atau file <b>Export Dashboard</b>. File Merger yang berisi campuran data akan otomatis dipisahkan.
+                   Otomatis mengenali file Raw Shopee, Order.all, Income, MyBalance, Adwords Bill atau file <b>Export Dashboard</b>. File Merger yang berisi campuran data akan otomatis dipisahkan.
                 </p>
              </div>
              <div className="p-6 bg-surface rounded-xl border border-border space-y-3 shadow-sm">
@@ -563,6 +574,28 @@ export default function UploadPage() {
                 />
                 <PreviewTable 
                   data={previewData.myBalance.duplicateRows} 
+                  type="duplicate" 
+                  category="failed"
+                  onExport={handleExport} 
+                />
+              </div>
+            )}
+
+            {/* ADWORDS BILL SECTION */}
+            {(previewData.adwordsBill.newRows.length > 0 || previewData.adwordsBill.duplicateRows.length > 0) && (
+              <div className="space-y-4 pt-4">
+                <div className="flex items-center gap-2 py-2 border-b border-border">
+                  <Megaphone className="text-brand" size={20} />
+                  <h3 className="text-lg font-bold text-text-main">Laporan Adwords Bill</h3>
+                </div>
+                <PreviewTable 
+                  data={previewData.adwordsBill.newRows} 
+                  type="new" 
+                  category="failed" 
+                  onExport={handleExport} 
+                />
+                <PreviewTable 
+                  data={previewData.adwordsBill.duplicateRows} 
                   type="duplicate" 
                   category="failed"
                   onExport={handleExport} 

@@ -2,7 +2,7 @@
 import JSZip from 'jszip';
 import * as XLSX from 'xlsx';
 import { ProcessedReport, PreviewData } from '../../types';
-import { FAILED_DELIVERY_COLUMNS, RETURN_REFUND_COLUMNS, CANCELLED_COLUMNS, ORDER_ALL_COLUMNS, INCOME_COLUMNS, MY_BALANCE_COLUMNS, generateUniqueKey } from './constants';
+import { FAILED_DELIVERY_COLUMNS, RETURN_REFUND_COLUMNS, CANCELLED_COLUMNS, ORDER_ALL_COLUMNS, INCOME_COLUMNS, MY_BALANCE_COLUMNS, ADWORDS_BILL_COLUMNS, generateUniqueKey } from './constants';
 
 const monthMap: Record<string, string> = {
   '01': 'Januari', '02': 'Februari', '03': 'Maret', '04': 'April',
@@ -30,7 +30,7 @@ export const processFileBuffer = (
   buffer: ArrayBuffer, 
   fileName: string, 
   results: PreviewData,
-  existingKeys: { failed: Set<string>, returned: Set<string>, cancelled: Set<string>, orderAll: Set<string>, income: Set<string>, myBalance: Set<string> },
+  existingKeys: { failed: Set<string>, returned: Set<string>, cancelled: Set<string>, orderAll: Set<string>, income: Set<string>, myBalance: Set<string>, adwordsBill: Set<string> },
   parentMetadata: { namaToko?: string, bulan?: string } = {}
 ) => {
   const workbook = XLSX.read(buffer, { type: 'array' });
@@ -43,6 +43,7 @@ export const processFileBuffer = (
   const isFilenameOrderAll = lowerName.includes('order.all');
   const isFilenameIncome = lowerName.includes('income');
   const isFilenameMyBalance = lowerName.includes('my_balance') || lowerName.includes('transaction_report');
+  const isFilenameAdwordsBill = lowerName.includes('adwords_bill');
 
   let readOpts: XLSX.Sheet2JSONOpts = { defval: '' };
 
@@ -54,6 +55,9 @@ export const processFileBuffer = (
   } else if (isFilenameMyBalance) {
      sheetName = workbook.SheetNames.find(n => n.toLowerCase() === 'transaction report');
      readOpts.range = 17; // MyBalance starts from row 18 (index 17)
+  } else if (isFilenameAdwordsBill) {
+     sheetName = workbook.SheetNames[0]; // Only one sheet
+     readOpts.range = 6; // Header is on row 7 (index 6)
   }
 
   // Fallback for standard files if sheet not found by name logic
@@ -61,6 +65,7 @@ export const processFileBuffer = (
       if (isFilenameOrderAll) sheetName = workbook.SheetNames.find(n => n.toLowerCase() === 'orders');
       else if (isFilenameIncome) sheetName = workbook.SheetNames.find(n => n.toLowerCase() === 'income');
       else if (isFilenameMyBalance) sheetName = workbook.SheetNames.find(n => n.toLowerCase() === 'transaction report');
+      else if (isFilenameAdwordsBill) sheetName = workbook.SheetNames[0];
   }
   
   if (!sheetName && workbook.SheetNames.length > 0) sheetName = workbook.SheetNames[0];
@@ -91,6 +96,7 @@ export const processFileBuffer = (
   const orderAllRowsBatch: any[] = [];
   const incomeRowsBatch: any[] = [];
   const myBalanceRowsBatch: any[] = [];
+  const adwordsBillRowsBatch: any[] = [];
 
   // Metadata
   let namaToko = parentMetadata.namaToko;
@@ -117,7 +123,7 @@ export const processFileBuffer = (
 
   // Row Iteration
   rawData.forEach((row: any) => {
-    let rowType: 'failed' | 'return' | 'cancelled' | 'order-all' | 'income' | 'my-balance' | null = null;
+    let rowType: 'failed' | 'return' | 'cancelled' | 'order-all' | 'income' | 'my-balance' | 'adwords-bill' | null = null;
 
     if (isExportFile) {
       const typeVal = row['Type Laporan'];
@@ -127,10 +133,12 @@ export const processFileBuffer = (
       else if (typeVal === 'Order All') rowType = 'order-all';
       else if (typeVal === 'Income') rowType = 'income';
       else if (typeVal === 'MyBalance') rowType = 'my-balance';
+      else if (typeVal === 'Adwords Bill') rowType = 'adwords-bill';
     } else {
       if (isFilenameOrderAll) rowType = 'order-all';
       else if (isFilenameIncome) rowType = 'income';
       else if (isFilenameMyBalance) rowType = 'my-balance';
+      else if (isFilenameAdwordsBill) rowType = 'adwords-bill';
       else if (isFilenameFailed) rowType = 'failed';
       else if (isFilenameReturn) rowType = 'return';
       else if (isFilenameCancelled) rowType = 'cancelled';
@@ -152,6 +160,7 @@ export const processFileBuffer = (
       else if (rowType === 'cancelled') reportTypeLabel = 'Pembatalan';
       else if (rowType === 'income') reportTypeLabel = 'Income';
       else if (rowType === 'my-balance') reportTypeLabel = 'MyBalance';
+      else if (rowType === 'adwords-bill') reportTypeLabel = 'Adwords Bill';
       else reportTypeLabel = 'Order All';
 
       const enrichedRow = {
@@ -171,6 +180,7 @@ export const processFileBuffer = (
       else if (rowType === 'cancelled') cancelledRowsBatch.push(enrichedRow);
       else if (rowType === 'income') incomeRowsBatch.push(enrichedRow);
       else if (rowType === 'my-balance') myBalanceRowsBatch.push(enrichedRow);
+      else if (rowType === 'adwords-bill') adwordsBillRowsBatch.push(enrichedRow);
       else orderAllRowsBatch.push(enrichedRow);
     }
   });
@@ -178,7 +188,7 @@ export const processFileBuffer = (
   const timestamp = Date.now();
   
   // BATCH PROCESSING
-  const processBatch = (rows: any[], type: 'failed' | 'return' | 'cancelled' | 'order-all' | 'income' | 'my-balance', columns: string[], reportType: string) => {
+  const processBatch = (rows: any[], type: 'failed' | 'return' | 'cancelled' | 'order-all' | 'income' | 'my-balance' | 'adwords-bill', columns: string[], reportType: string) => {
       if (rows.length === 0) return;
       
       if (!isExportFile && !validateColumns(rows, columns)) {
@@ -197,6 +207,7 @@ export const processFileBuffer = (
       else if (type === 'cancelled') targetSet = existingKeys.cancelled;
       else if (type === 'income') targetSet = existingKeys.income;
       else if (type === 'my-balance') targetSet = existingKeys.myBalance;
+      else if (type === 'adwords-bill') targetSet = existingKeys.adwordsBill;
       else targetSet = existingKeys.orderAll;
 
       rows.forEach(row => {
@@ -224,6 +235,9 @@ export const processFileBuffer = (
       } else if (type === 'my-balance') {
           results.myBalance.duplicateRows.push(...duplicateRows);
           results.myBalance.newRows.push(...validNewRows);
+      } else if (type === 'adwords-bill') {
+          results.adwordsBill.duplicateRows.push(...duplicateRows);
+          results.adwordsBill.newRows.push(...validNewRows);
       } else {
           results.orderAll.duplicateRows.push(...duplicateRows);
           results.orderAll.newRows.push(...validNewRows);
@@ -248,6 +262,7 @@ export const processFileBuffer = (
   processBatch(orderAllRowsBatch, 'order-all', ORDER_ALL_COLUMNS, 'Order All');
   processBatch(incomeRowsBatch, 'income', INCOME_COLUMNS, 'Income');
   processBatch(myBalanceRowsBatch, 'my-balance', MY_BALANCE_COLUMNS, 'MyBalance');
+  processBatch(adwordsBillRowsBatch, 'adwords-bill', ADWORDS_BILL_COLUMNS, 'Adwords Bill');
 
   return fileHasStatus;
 };

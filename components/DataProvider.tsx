@@ -29,6 +29,7 @@ interface DataContextType {
   orderAllReports: ProcessedReport[];
   incomeReports: ProcessedReport[];
   myBalanceReports: ProcessedReport[]; // New
+  adwordsBillReports: ProcessedReport[]; // New
   logs: LogEntry[];
   columnSettings: ColumnSettingsMap;
   skuMasterData: SkuMasterItem[];
@@ -40,6 +41,7 @@ interface DataContextType {
   addOrderAllReport: (report: ProcessedReport) => Promise<void>;
   addIncomeReport: (report: ProcessedReport) => Promise<void>;
   addMyBalanceReport: (report: ProcessedReport) => Promise<void>; // New
+  addAdwordsBillReport: (report: ProcessedReport) => Promise<void>; // New
   updateReportRowStatus: (reportId: string, rowIndex: number, newStatus: string) => Promise<void>;
   updateBulkStatus: (selections: { reportId: string, rowIndex: number }[], newStatus: string) => Promise<void>;
   deleteRows: (selections: { reportId: string, rowIndex: number }[]) => Promise<void>;
@@ -64,6 +66,7 @@ export function DataProvider({ children }: { children?: ReactNode }) {
   const [orderAllReports, setOrderAllReports] = useState<ProcessedReport[]>([]);
   const [incomeReports, setIncomeReports] = useState<ProcessedReport[]>([]);
   const [myBalanceReports, setMyBalanceReports] = useState<ProcessedReport[]>([]); // New
+  const [adwordsBillReports, setAdwordsBillReports] = useState<ProcessedReport[]>([]); // New
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [columnSettings, setColumnSettings] = useState<ColumnSettingsMap>({});
   const [skuMasterData, setSkuMasterData] = useState<SkuMasterItem[]>([]);
@@ -88,6 +91,7 @@ export function DataProvider({ children }: { children?: ReactNode }) {
       setOrderAllReports(reportsData.orderAll);
       setIncomeReports(reportsData.income);
       setMyBalanceReports(reportsData.myBalance); // New
+      setAdwordsBillReports(reportsData.adwordsBill || []); // New
       setLogs(logsData);
       setColumnSettings(settingsData);
       setSkuMasterData(skuData);
@@ -197,6 +201,16 @@ export function DataProvider({ children }: { children?: ReactNode }) {
     }
   };
 
+  const addAdwordsBillReport = async (report: ProcessedReport) => {
+    setAdwordsBillReports(prev => [report, ...prev]);
+    try {
+      await saveReportAction(report);
+    } catch (error) {
+      console.error("Failed to save report to DB", error);
+      addLog('error', 'Database Error', 'Gagal menyimpan laporan Adwords Bill ke database.');
+    }
+  };
+
   const updateReportRowStatus = async (reportId: string, rowIndex: number, newStatus: string) => {
      await updateBulkStatus([{ reportId, rowIndex }], newStatus);
   };
@@ -205,7 +219,7 @@ export function DataProvider({ children }: { children?: ReactNode }) {
     const targetOrderIds = new Set<string>();
     const specificRowKeys = new Set<string>();
 
-    const allReports = [...failedDeliveryReports, ...returnRefundReports, ...cancelledReports, ...orderAllReports, ...incomeReports, ...myBalanceReports];
+    const allReports = [...failedDeliveryReports, ...returnRefundReports, ...cancelledReports, ...orderAllReports, ...incomeReports, ...myBalanceReports, ...adwordsBillReports];
 
     selections.forEach(sel => {
         const report = allReports.find(r => r.id === sel.reportId);
@@ -271,7 +285,8 @@ export function DataProvider({ children }: { children?: ReactNode }) {
         applyUpdates(cancelledReports, setCancelledReports),
         applyUpdates(orderAllReports, setOrderAllReports),
         applyUpdates(incomeReports, setIncomeReports),
-        applyUpdates(myBalanceReports, setMyBalanceReports)
+        applyUpdates(myBalanceReports, setMyBalanceReports),
+        applyUpdates(adwordsBillReports, setAdwordsBillReports)
     ]);
 
     // --- AUTOMATIC LOGGING (UPDATED) ---
@@ -297,7 +312,7 @@ export function DataProvider({ children }: { children?: ReactNode }) {
   const deleteRows = async (selections: { reportId: string, rowIndex: number }[]) => {
     // 1. CAPTURE DATA FOR LOGGING BEFORE DELETION
     const deletedOrderIds: string[] = [];
-    const allReports = [...failedDeliveryReports, ...returnRefundReports, ...cancelledReports, ...orderAllReports, ...incomeReports, ...myBalanceReports];
+    const allReports = [...failedDeliveryReports, ...returnRefundReports, ...cancelledReports, ...orderAllReports, ...incomeReports, ...myBalanceReports, ...adwordsBillReports];
 
     selections.forEach(sel => {
         const report = allReports.find(r => r.id === sel.reportId);
@@ -367,7 +382,8 @@ export function DataProvider({ children }: { children?: ReactNode }) {
             processList(cancelledReports, setCancelledReports),
             processList(orderAllReports, setOrderAllReports),
             processList(incomeReports, setIncomeReports),
-            processList(myBalanceReports, setMyBalanceReports)
+            processList(myBalanceReports, setMyBalanceReports),
+            processList(adwordsBillReports, setAdwordsBillReports)
         ]);
 
         // 3. SUCCESSFUL LOGGING (UPDATED)
@@ -401,6 +417,7 @@ export function DataProvider({ children }: { children?: ReactNode }) {
     setOrderAllReports([]);
     setIncomeReports([]);
     setMyBalanceReports([]);
+    setAdwordsBillReports([]);
     try {
       await clearReportsAction();
       addLog('info', 'Data Dihapus', 'Seluruh laporan dashboard telah dibersihkan dari database.');
@@ -472,6 +489,7 @@ export function DataProvider({ children }: { children?: ReactNode }) {
       orderAllReports,
       incomeReports,
       myBalanceReports,
+      adwordsBillReports,
       logs,
       columnSettings,
       skuMasterData,
@@ -483,6 +501,7 @@ export function DataProvider({ children }: { children?: ReactNode }) {
       addOrderAllReport,
       addIncomeReport,
       addMyBalanceReport,
+      addAdwordsBillReport,
       updateReportRowStatus,
       updateBulkStatus,
       deleteRows,

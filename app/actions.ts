@@ -120,7 +120,7 @@ export async function verifyLoginAction(username: string, password: string): Pro
 
 // --- EXISTING ACTIONS BELOW ---
 
-export async function fetchReportsAction(): Promise<{ failed: ProcessedReport[], returned: ProcessedReport[], cancelled: ProcessedReport[], orderAll: ProcessedReport[], income: ProcessedReport[], myBalance: ProcessedReport[] }> {
+export async function fetchReportsAction(): Promise<{ failed: ProcessedReport[], returned: ProcessedReport[], cancelled: ProcessedReport[], orderAll: ProcessedReport[], income: ProcessedReport[], myBalance: ProcessedReport[], adwordsBill: ProcessedReport[] }> {
   await ensureTables();
   // Ensure we get raw rows. MySQL2 handles JSON parsing automatically if column type is JSON.
   const [rows] = await pool.query('SELECT * FROM reports ORDER BY created_at DESC');
@@ -154,7 +154,8 @@ export async function fetchReportsAction(): Promise<{ failed: ProcessedReport[],
     cancelled: reports.filter(r => r.jenisLaporan === 'Pembatalan'),
     orderAll: reports.filter(r => r.jenisLaporan === 'Order All'),
     income: reports.filter(r => r.jenisLaporan === 'Income'),
-    myBalance: reports.filter(r => r.jenisLaporan === 'MyBalance')
+    myBalance: reports.filter(r => r.jenisLaporan === 'MyBalance'),
+    adwordsBill: reports.filter(r => r.jenisLaporan === 'Adwords Bill')
   };
 }
 

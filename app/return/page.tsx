@@ -30,7 +30,8 @@ export default function ReturnPage() {
     status: [] as string[], 
     toko: '',
     type: '',
-    bulan: [] as string[] // Changed to Array for Multi-select
+    bulan: [] as string[], // Changed to Array for Multi-select
+    orderStatus: [] as string[]
   });
 
   // -- DATE FILTER STATE --
@@ -57,7 +58,7 @@ export default function ReturnPage() {
   });
 
   const handleResetFilters = () => {
-    setFilters({ status: [], toko: '', type: '', bulan: [] });
+    setFilters({ status: [], toko: '', type: '', bulan: [], orderStatus: [] });
     setDateFilter({ column: '', start: '', end: '' });
     setSearchQuery('');
   };

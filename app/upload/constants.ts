@@ -73,8 +73,12 @@ export const MY_BALANCE_COLUMNS = [
   "Tanggal Transaksi", "Tipe Transaksi", "Deskripsi", "No. Pesanan", "Jenis Transaksi", "Jumlah", "Status", "Saldo Akhir"
 ];
 
+export const ADWORDS_BILL_COLUMNS = [
+  "Urutan", "Waktu", "Deskripsi", "Jumlah", "Catatan"
+];
+
 // Helper to generate unique keys for duplicate detection
-export const generateUniqueKey = (row: any, type: 'failed' | 'return' | 'cancelled' | 'order-all' | 'income' | 'my-balance'): string => {
+export const generateUniqueKey = (row: any, type: 'failed' | 'return' | 'cancelled' | 'order-all' | 'income' | 'my-balance' | 'adwords-bill'): string => {
   const normalize = (val: any) => String(val || '').trim().toLowerCase();
   
   if (type === 'failed') {
@@ -126,6 +130,13 @@ export const generateUniqueKey = (row: any, type: 'failed' | 'return' | 'cancell
       normalize(row['Deskripsi']),
       normalize(row['Jumlah']),
       normalize(row['Saldo Akhir'])
+    ].join('|');
+  } else if (type === 'adwords-bill') {
+    return [
+      normalize(row['Urutan']),
+      normalize(row['Waktu']),
+      normalize(row['Deskripsi']),
+      normalize(row['Jumlah'])
     ].join('|');
   } else {
     // Order All

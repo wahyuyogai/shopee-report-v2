@@ -1,7 +1,7 @@
 
 export type View = 'dashboard' | 'upload' | 'settings' | 'logs';
 export type DashboardTab = 'merger' | 'failed' | 'return' | 'cancelled';
-export type FinanceTab = 'order-all' | 'income' | 'my-balance';
+export type FinanceTab = 'order-all' | 'income' | 'my-balance' | 'adwords-bill';
 export type Theme = 'light' | 'dark' | 'indigo' | 'emerald' | 'facebook' | 'shopee' | 'tiktok' | 'netflix' | 'indomaret' | 'alfamart' | 'instagram' | 'gradient';
 export type BorderStyle = 'sharp' | 'modern' | 'soft';
 export type BorderWeight = 'thin' | 'regular' | 'bold';
@@ -69,6 +69,10 @@ export interface PreviewData {
     duplicateRows: any[];
   };
   myBalance: {
+    newRows: any[];
+    duplicateRows: any[];
+  };
+  adwordsBill: {
     newRows: any[];
     duplicateRows: any[];
   };

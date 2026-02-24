@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { DollarSign, FileText, TrendingUp, Wallet, Search, Filter } from 'lucide-react';
+import { DollarSign, FileText, TrendingUp, Wallet, Search, Filter, Megaphone } from 'lucide-react';
 import { FinanceTab } from '../../types';
 import { useData } from '../../components/DataProvider';
 import { DashboardTable } from '../../components/DashboardTable';
@@ -86,7 +86,7 @@ const getEnrichedData = (reports: any[], skuMap: Map<string, any>) => {
 export default function FinancePage() {
   const [activeTab, setActiveTab] = useState<FinanceTab>('order-all');
   const [searchQuery, setSearchQuery] = useState('');
-  const { orderAllReports, incomeReports, myBalanceReports, skuMasterData, isLoading, updateReportRowStatus, updateBulkStatus } = useData();
+  const { orderAllReports, incomeReports, myBalanceReports, adwordsBillReports, skuMasterData, isLoading, updateReportRowStatus, updateBulkStatus } = useData();
   const [showFilters, setShowFilters] = useState(false);
   
   // -- FILTER STATES --
@@ -94,7 +94,8 @@ export default function FinancePage() {
     status: [] as string[], 
     toko: '',
     type: '',
-    bulan: [] as string[]
+    bulan: [] as string[],
+    orderStatus: [] as string[]
   });
 
   // -- DATE FILTER STATE --
@@ -108,6 +109,7 @@ export default function FinancePage() {
     { id: 'order-all' as FinanceTab, label: 'Order All', icon: <FileText size={16} />, color: 'text-brand' },
     { id: 'income' as FinanceTab, label: 'Income', icon: <TrendingUp size={16} />, color: 'text-emerald-500' },
     { id: 'my-balance' as FinanceTab, label: 'MyBalance', icon: <Wallet size={16} />, color: 'text-blue-500' },
+    { id: 'adwords-bill' as FinanceTab, label: 'Adwords Bill', icon: <Megaphone size={16} />, color: 'text-amber-500' },
   ];
 
   const currentTab = tabs.find(t => t.id === activeTab) || tabs[0];
@@ -130,9 +132,11 @@ export default function FinancePage() {
     } else if (activeTab === 'my-balance') {
       // MyBalance rarely needs SKU processing, but getEnrichedData handles generic fields too
       return getEnrichedData(myBalanceReports, skuMap);
+    } else if (activeTab === 'adwords-bill') {
+      return getEnrichedData(adwordsBillReports, skuMap);
     }
     return [];
-  }, [activeTab, orderAllReports, incomeReports, myBalanceReports, skuMap]);
+  }, [activeTab, orderAllReports, incomeReports, myBalanceReports, adwordsBillReports, skuMap]);
 
   // Apply Filters
   const filteredData = useMemo(() => {
@@ -199,7 +203,8 @@ export default function FinancePage() {
     return {
       toko: Array.from(tokos).sort(),
       type: Array.from(types).sort(),
-      bulan: Array.from(bulans).sort()
+      bulan: Array.from(bulans).sort(),
+      orderStatus: []
     };
   }, [rawData]);
 
@@ -295,7 +300,7 @@ export default function FinancePage() {
         )}
 
         {/* Content */}
-        {activeTab === 'order-all' || activeTab === 'income' || activeTab === 'my-balance' ? (
+        {activeTab === 'order-all' || activeTab === 'income' || activeTab === 'my-balance' || activeTab === 'adwords-bill' ? (
           <div className="p-4 md:p-6 min-h-[500px]">
              <DashboardTable 
                data={filteredData}
