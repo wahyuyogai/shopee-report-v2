@@ -204,7 +204,7 @@ export default function FinancePage() {
       toko: Array.from(tokos).sort(),
       type: Array.from(types).sort(),
       bulan: Array.from(bulans).sort(),
-      orderStatus: []
+      orderStatus: [] as string[]
     };
   }, [rawData]);
 

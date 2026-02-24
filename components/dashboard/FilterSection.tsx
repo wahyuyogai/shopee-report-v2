@@ -26,14 +26,14 @@ interface FilterSectionProps {
   };
   claimStatusOptions: string[];
   statusCounts?: Record<string, number>; // New prop
-  feeToggles: {
+  feeToggles?: {
     admin: boolean;
     freeShip: boolean;
     promo: boolean;
     premi: boolean;
     tx: boolean;
   };
-  setFeeToggles: React.Dispatch<React.SetStateAction<{
+  setFeeToggles?: React.Dispatch<React.SetStateAction<{
     admin: boolean;
     freeShip: boolean;
     promo: boolean;
@@ -97,6 +97,7 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
           />
         </div>
 
+        {feeToggles && setFeeToggles && (
         <div className="mt-6 pt-4 border-t border-border">
           <div className="flex items-center gap-2 mb-3 text-brand">
             <h3 className="text-xs font-bold uppercase tracking-wider">Komponen Biaya Lainnya</h3>
@@ -124,6 +125,7 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
             </label>
           </div>
         </div>
+        )}
     </div>
   );
 };

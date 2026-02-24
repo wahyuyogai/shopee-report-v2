@@ -329,7 +329,8 @@ export const useDashboardData = ({
     return {
       toko: Array.from(tokos).sort(),
       type: Array.from(types).sort(),
-      bulan: Array.from(bulans).sort()
+      bulan: Array.from(bulans).sort(),
+      orderStatus: [] as string[]
     };
   }, [baseData]);
 

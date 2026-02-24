@@ -125,14 +125,14 @@ export default function UploadPage() {
             const zipEntry = contents.files[fileName];
             if (!zipEntry.dir && !fileName.startsWith('__MACOSX') && !fileName.startsWith('._')) {
                const lowerFileName = fileName.toLowerCase();
-               if (lowerFileName.endsWith('.xlsx') || lowerFileName.endsWith('.xls')) {
+               if (lowerFileName.endsWith('.xlsx') || lowerFileName.endsWith('.xls') || lowerFileName.endsWith('.csv')) {
                  const buffer = await zipEntry.async('arraybuffer');
                  const hasStatus = processFileBuffer(buffer, fileName, tempResults, existingKeys, parentMetadata);
                  if (hasStatus) fileHasStatus = true;
                }
             }
           }
-        } else if (file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls')) {
+        } else if (file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls') || file.name.toLowerCase().endsWith('.csv')) {
            const buffer = await file.arrayBuffer();
            const hasStatus = processFileBuffer(buffer, file.name, tempResults, existingKeys, parentMetadata);
            if (hasStatus) fileHasStatus = true;
@@ -279,7 +279,7 @@ export default function UploadPage() {
                 type="file" 
                 className="hidden" 
                 multiple
-                accept=".zip,.xlsx,.xls"
+                accept=".zip,.xlsx,.xls,.csv"
                 onChange={handleFileUpload}
                 disabled={isProcessing}
               />
@@ -321,7 +321,7 @@ export default function UploadPage() {
                          </p>
                          <p className="flex items-center gap-2">
                             <span className="w-20 font-bold text-brand text-right">Adwords:</span> 
-                            <span className="font-mono bg-app px-1 rounded">adwords_bill...xlsx</span>
+                            <span className="font-mono bg-app px-1 rounded">adwords_bill...csv</span>
                          </p>
                          <p className="text-[10px] text-emerald-600 italic mt-1 pt-1 border-t border-border/50 text-center font-medium">
                             *Mendukung re-upload file hasil export dashboard.
@@ -329,7 +329,7 @@ export default function UploadPage() {
                       </div>
                     </div>
                     <div className="px-6 py-2.5 bg-brand text-brand-content rounded-full font-bold shadow-lg hover:scale-105 active:scale-95 transition-all">
-                      Pilih File(s) (.zip / .xlsx / .xls)
+                      Pilih File(s) (.zip / .xlsx / .xls / .csv)
                     </div>
                   </>
                 )}
