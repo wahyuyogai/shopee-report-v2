@@ -2,7 +2,8 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { BarChart3, Search, Filter } from 'lucide-react';
+import { BarChart3, Search, Filter, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { useData } from '../components/DataProvider';
 import { DashboardTable } from '../components/DashboardTable';
 import { FilterSection } from '../components/dashboard/FilterSection';
@@ -163,6 +164,7 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const { orderAllReports, myBalanceReports, skuMasterData, isLoading, updateReportRowStatus, updateBulkStatus } = useData();
   const [showFilters, setShowFilters] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   // -- FILTER STATES --
   const [filters, setFilters] = useState({
@@ -230,8 +232,7 @@ export default function DashboardPage() {
       }
     });
 
-    // Process Biaya Iklan data (this should also be filtered if applicable)
-    // For now, we assume isiUlangSaldoData is not affected by the main filters.
+    // Process Biaya Iklan data
     isiUlangSaldoData.forEach(row => {
       const dateStr = row['Tanggal Transaksi']?.split(' ')[0];
       if (dateStr) {
@@ -257,6 +258,27 @@ export default function DashboardPage() {
     });
 
   }, [filteredData, isiUlangSaldoData]);
+
+  const handleExport = () => {
+    setIsExporting(true);
+    setTimeout(() => {
+      try {
+        if (filteredData.length === 0) {
+          console.warn('No data to export.');
+          return;
+        }
+        const fileName = `OrderAll-Export-${new Date().toISOString().split('T')[0]}.xlsx`;
+        const worksheet = XLSX.utils.json_to_sheet(filteredData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
+        XLSX.writeFile(workbook, fileName);
+      } catch (error) {
+        console.error("Export failed", error);
+      } finally {
+        setIsExporting(false);
+      }
+    }, 500);
+  };
 
   // Apply Filters
   const filteredData = useMemo(() => {
@@ -421,6 +443,14 @@ export default function DashboardPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+            <button
+                onClick={handleExport}
+                disabled={isExporting}
+                className="flex items-center gap-2 px-4 py-2.5 bg-brand text-brand-content rounded-xl text-sm font-bold transition-all hover:bg-brand/90 disabled:bg-brand/50 disabled:cursor-not-allowed h-[46px]"
+            >
+                <Download size={16} />
+                <span>{isExporting ? 'Mengekspor...' : 'Export Excel'}</span>
+            </button>
           </div>
         </div>
 

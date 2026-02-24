@@ -5,8 +5,8 @@ import { ArrowUpDown, Loader2 } from 'lucide-react';
 
 type SortDirection = 'asc' | 'desc';
 
-interface SkuAnalysisData {
-  skuFinal: string;
+interface CustomerAnalysisData {
+  namaPembeli: string;
   totalPesanan: number;
   totalKuantitas: number;
   totalBelanja: number;
@@ -15,8 +15,8 @@ interface SkuAnalysisData {
   rataRataProfit: number;
 }
 
-interface SkuAnalysisTableProps {
-  data: SkuAnalysisData[];
+interface CustomerAnalysisTableProps {
+  data: CustomerAnalysisData[];
   isLoading: boolean;
 }
 
@@ -29,8 +29,8 @@ const formatCurrency = (value: number) => {
     }).format(value);
 };
 
-export const SkuAnalysisTable: React.FC<SkuAnalysisTableProps> = ({ data, isLoading }) => {
-    const [sortColumn, setSortColumn] = useState<keyof SkuAnalysisData>('estimasiProfit');
+export const CustomerAnalysisTable: React.FC<CustomerAnalysisTableProps> = ({ data, isLoading }) => {
+    const [sortColumn, setSortColumn] = useState<keyof CustomerAnalysisData>('estimasiProfit');
     const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
     const sortedData = useMemo(() => {
@@ -49,7 +49,7 @@ export const SkuAnalysisTable: React.FC<SkuAnalysisTableProps> = ({ data, isLoad
         });
     }, [data, sortColumn, sortDirection]);
 
-    const handleSort = (column: keyof SkuAnalysisData) => {
+    const handleSort = (column: keyof CustomerAnalysisData) => {
         if (sortColumn === column) {
             setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
         } else {
@@ -58,7 +58,7 @@ export const SkuAnalysisTable: React.FC<SkuAnalysisTableProps> = ({ data, isLoad
         }
     };
 
-    const SortableHeader = ({ column, label }: { column: keyof SkuAnalysisData; label: string }) => (
+    const SortableHeader = ({ column, label }: { column: keyof CustomerAnalysisData; label: string }) => (
         <th scope="col" className="px-4 py-3 cursor-pointer hover:bg-app" onClick={() => handleSort(column)}>
             <div className="flex items-center gap-1">
                 {label}
@@ -84,7 +84,7 @@ export const SkuAnalysisTable: React.FC<SkuAnalysisTableProps> = ({ data, isLoad
             <table className="w-full text-sm text-left">
                 <thead className="text-xs text-text-muted uppercase bg-app/40">
                     <tr>
-                        <SortableHeader column="skuFinal" label="SKU Final" />
+                        <SortableHeader column="namaPembeli" label="Nama Pembeli" />
                         <SortableHeader column="totalPesanan" label="Total Pesanan" />
                         <SortableHeader column="totalKuantitas" label="Total Kuantitas" />
                         <SortableHeader column="totalBelanja" label="Total Belanja" />
@@ -95,8 +95,8 @@ export const SkuAnalysisTable: React.FC<SkuAnalysisTableProps> = ({ data, isLoad
                 </thead>
                 <tbody>
                     {sortedData.map((item) => (
-                        <tr key={item.skuFinal} className="border-b border-border hover:bg-surface/80">
-                            <td className="px-4 py-3 font-medium text-text-main whitespace-nowrap">{item.skuFinal}</td>
+                        <tr key={item.namaPembeli} className="border-b border-border hover:bg-surface/80">
+                            <td className="px-4 py-3 font-medium text-text-main whitespace-nowrap">{item.namaPembeli}</td>
                             <td className="px-4 py-3 text-center">{item.totalPesanan}</td>
                             <td className="px-4 py-3 text-center">{item.totalKuantitas}</td>
                             <td className="px-4 py-3 text-right">{formatCurrency(item.totalBelanja)}</td>
