@@ -140,7 +140,7 @@ const getEnrichedData = (reports: any[], skuMap: Map<string, any>, feeToggles: a
 
       return {
         ...rest,
-        'Nama Toko': namaToko || r.namaToko,
+        'Nama Toko': (namaToko || r.namaToko).toUpperCase(),
         'Estimasi Profit': estimasiProfitStr,
         'Revenue Base': revenueBaseStr,
         'Admin Shopee 8.25%': adminFeeStr,
