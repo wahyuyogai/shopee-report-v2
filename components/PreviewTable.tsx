@@ -12,6 +12,42 @@ interface PreviewTableProps {
   onExport: (data: any[], prefix: string) => void;
 }
 
+const formatDate = (dateValue: any): string => {
+  if (!dateValue) return '-';
+
+  // Handle Excel numeric date format
+  if (typeof dateValue === 'number') {
+    // Excel's epoch starts on 1900-01-01, but JS's is 1970-01-01.
+    // There's also a leap year bug in Excel for 1900.
+    const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+    const date = new Date(excelEpoch.getTime() + dateValue * 24 * 60 * 60 * 1000);
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+  }
+
+  const dateStr = String(dateValue);
+  // Handle 'DD/MM/YYYY' or 'D/M/YYYY'
+  const parts = dateStr.split('/');
+  if (parts.length === 3) {
+    const day = parts[0].padStart(2, '0');
+    const month = parts[1].padStart(2, '0');
+    const year = parts[2];
+    const d = new Date(`${year}-${month}-${day}`);
+    if (!isNaN(d.getTime())) {
+        return `${day}/${month}/${year}`;
+    }
+  }
+  
+  // Fallback for other valid date strings
+  const d = new Date(dateStr);
+  if (!isNaN(d.getTime())) {
+    return d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+
+  return dateStr; // Return original if all parsing fails
+};
+
 export const PreviewTable: React.FC<PreviewTableProps> = ({ data, type, category, onExport }) => {
   if (data.length === 0) return null;
   
@@ -68,7 +104,7 @@ export const PreviewTable: React.FC<PreviewTableProps> = ({ data, type, category
               <tr key={idx} className="hover:bg-black/5 transition-colors">
                 {headers.map(h => (
                   <td key={h} className="px-4 py-2 whitespace-nowrap text-text-main">
-                    {row[h]?.toString() || '-'}
+                    {h === 'Waktu' ? formatDate(row[h]) : (row[h]?.toString() || '-')}
                   </td>
                 ))}
               </tr>
