@@ -365,6 +365,7 @@ export default function DashboardPage() {
 
         {/* Content */}
         <div className="p-4 md:p-6 min-h-[500px]">
+          <h2 className="text-xl font-bold text-text-main tracking-tight mb-4">Order All</h2>
              <DashboardTable
                data={filteredData}
                isLoading={isLoading}
@@ -382,7 +383,7 @@ export default function DashboardPage() {
       {/* Isi Ulang Saldo Table */}
       <section className="bg-surface rounded-2xl shadow-xl border border-border overflow-hidden transition-all duration-500">
         <div className="p-4 md:p-6">
-          <h2 className="text-xl font-bold text-text-main tracking-tight mb-4">Isi Ulang Saldo Iklan/Koin Penjual</h2>
+          <h2 className="text-xl font-bold text-text-main tracking-tight mb-4">Biaya Iklan</h2>
           <DashboardTable
             data={isiUlangSaldoData}
             isLoading={isLoading}
