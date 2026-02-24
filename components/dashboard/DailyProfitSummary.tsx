@@ -8,6 +8,7 @@ interface DailyProfitData {
   estimasiProfit: number;
   deduction: number;
   rebate: number;
+  ppn: number;
   jumlahBiayaIklan: number;
   estProfitBersih: number;
 }
@@ -59,6 +60,7 @@ export const DailyProfitSummary: React.FC<DailyProfitSummaryProps> = ({ data, is
   const totalEstimasiProfit = data.reduce((sum, item) => sum + item.estimasiProfit, 0);
   const totalDeduction = data.reduce((sum, item) => sum + (item.deduction || 0), 0);
   const totalRebate = data.reduce((sum, item) => sum + (item.rebate || 0), 0);
+  const totalPpn = data.reduce((sum, item) => sum + (item.ppn || 0), 0);
   const totalJumlahBiayaIklan = data.reduce((sum, item) => sum + item.jumlahBiayaIklan, 0);
   const totalEstProfitBersih = data.reduce((sum, item) => sum + item.estProfitBersih, 0);
 
@@ -94,6 +96,7 @@ export const DailyProfitSummary: React.FC<DailyProfitSummaryProps> = ({ data, is
                                 <>
                                     <th scope="col" className="px-4 py-3 text-right">Deduction</th>
                                     <th scope="col" className="px-4 py-3 text-right">Rebate</th>
+                                    <th scope="col" className="px-4 py-3 text-right">PPN 11%</th>
                                 </>
                             )}
                             <th scope="col" className="px-4 py-3 text-right">Jumlah Biaya Iklan</th>
@@ -109,6 +112,7 @@ export const DailyProfitSummary: React.FC<DailyProfitSummaryProps> = ({ data, is
                                     <>
                                         <td className="px-4 py-3 text-right text-amber-500">{formatCurrency(item.deduction)}</td>
                                         <td className="px-4 py-3 text-right text-cyan-500">{formatCurrency(item.rebate)}</td>
+                                        <td className="px-4 py-3 text-right text-orange-500">{formatCurrency(item.ppn)}</td>
                                     </>
                                 )}
                                 <td className="px-4 py-3 text-right text-red-500">{formatCurrency(item.jumlahBiayaIklan)}</td>
@@ -131,6 +135,7 @@ export const DailyProfitSummary: React.FC<DailyProfitSummaryProps> = ({ data, is
                                 <>
                                     <td className="px-4 py-3 text-right text-amber-500">{formatCurrency(totalDeduction)}</td>
                                     <td className="px-4 py-3 text-right text-cyan-500">{formatCurrency(totalRebate)}</td>
+                                    <td className="px-4 py-3 text-right text-orange-500">{formatCurrency(totalPpn)}</td>
                                 </>
                             )}
                             <td className="px-4 py-3 text-right text-red-500">{formatCurrency(totalJumlahBiayaIklan)}</td>

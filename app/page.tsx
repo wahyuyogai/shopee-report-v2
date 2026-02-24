@@ -401,13 +401,15 @@ export default function DashboardPage() {
     return sortedDates.map(date => {
       const estimasiProfit = profitByDate.get(date) || 0;
       const adSpend = adSpendByDate.get(date) || { deduction: 0, rebate: 0 };
+      const ppn = adSpend.deduction * 0.11;
       const jumlahBiayaIklan = adSpend.deduction - adSpend.rebate;
-      const estProfitBersih = estimasiProfit - jumlahBiayaIklan;
+      const estProfitBersih = estimasiProfit - (jumlahBiayaIklan + ppn);
       return {
         tanggal: date,
         estimasiProfit,
         deduction: adSpend.deduction,
         rebate: adSpend.rebate,
+        ppn,
         jumlahBiayaIklan,
         estProfitBersih
       };
