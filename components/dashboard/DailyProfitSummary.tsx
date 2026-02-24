@@ -6,6 +6,8 @@ import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 interface DailyProfitData {
   tanggal: string;
   estimasiProfit: number;
+  deduction: number;
+  rebate: number;
   jumlahBiayaIklan: number;
   estProfitBersih: number;
 }
@@ -55,6 +57,8 @@ export const DailyProfitSummary: React.FC<DailyProfitSummaryProps> = ({ data, is
   }
 
   const totalEstimasiProfit = data.reduce((sum, item) => sum + item.estimasiProfit, 0);
+  const totalDeduction = data.reduce((sum, item) => sum + (item.deduction || 0), 0);
+  const totalRebate = data.reduce((sum, item) => sum + (item.rebate || 0), 0);
   const totalJumlahBiayaIklan = data.reduce((sum, item) => sum + item.jumlahBiayaIklan, 0);
   const totalEstProfitBersih = data.reduce((sum, item) => sum + item.estProfitBersih, 0);
 
@@ -86,6 +90,12 @@ export const DailyProfitSummary: React.FC<DailyProfitSummaryProps> = ({ data, is
                         <tr>
                             <th scope="col" className="px-4 py-3">Tanggal</th>
                             <th scope="col" className="px-4 py-3 text-right">Estimasi Profit</th>
+                            {adSpendMode === 'gmv-max' && (
+                                <>
+                                    <th scope="col" className="px-4 py-3 text-right">Deduction</th>
+                                    <th scope="col" className="px-4 py-3 text-right">Rebate</th>
+                                </>
+                            )}
                             <th scope="col" className="px-4 py-3 text-right">Jumlah Biaya Iklan</th>
                             <th scope="col" className="px-4 py-3 text-right">Est. Profit Bersih</th>
                         </tr>
@@ -95,6 +105,12 @@ export const DailyProfitSummary: React.FC<DailyProfitSummaryProps> = ({ data, is
                             <tr key={item.tanggal} className="border-b border-border hover:bg-surface/80">
                                 <td className="px-4 py-3 font-medium text-text-main whitespace-nowrap">{formatDate(item.tanggal)}</td>
                                 <td className="px-4 py-3 text-right">{formatCurrency(item.estimasiProfit)}</td>
+                                {adSpendMode === 'gmv-max' && (
+                                    <>
+                                        <td className="px-4 py-3 text-right text-amber-500">{formatCurrency(item.deduction)}</td>
+                                        <td className="px-4 py-3 text-right text-cyan-500">{formatCurrency(item.rebate)}</td>
+                                    </>
+                                )}
                                 <td className="px-4 py-3 text-right text-red-500">{formatCurrency(item.jumlahBiayaIklan)}</td>
                                 <td className={`px-4 py-3 text-right font-bold ${item.estProfitBersih >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                                     <div className="flex items-center justify-end gap-1">
@@ -111,6 +127,12 @@ export const DailyProfitSummary: React.FC<DailyProfitSummaryProps> = ({ data, is
                         <tr>
                             <td className="px-4 py-3">Total</td>
                             <td className="px-4 py-3 text-right">{formatCurrency(totalEstimasiProfit)}</td>
+                            {adSpendMode === 'gmv-max' && (
+                                <>
+                                    <td className="px-4 py-3 text-right text-amber-500">{formatCurrency(totalDeduction)}</td>
+                                    <td className="px-4 py-3 text-right text-cyan-500">{formatCurrency(totalRebate)}</td>
+                                </>
+                            )}
                             <td className="px-4 py-3 text-right text-red-500">{formatCurrency(totalJumlahBiayaIklan)}</td>
                             <td className={`px-4 py-3 text-right ${totalEstProfitBersih >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                                 <div className="flex items-center justify-end gap-1">

@@ -322,7 +322,7 @@ export default function DashboardPage() {
 
   const dailyProfitData = useMemo(() => {
     const profitByDate = new Map<string, number>();
-    const adSpendByDate = new Map<string, number>();
+    const adSpendByDate = new Map<string, { deduction: number, rebate: number }>();
 
     // Process Order All data for profit
     filteredData.forEach(row => {
@@ -379,35 +379,35 @@ export default function DashboardPage() {
       if (dateStr) {
         const spendStr = String(row['Jumlah'] || '0');
         const spendVal = parseFloat(spendStr.replace(/[^0-9-]/g, '')) || 0;
-        
-        let dailyAdSpend = 0;
+        const currentAdSpend = adSpendByDate.get(dateStr) || { deduction: 0, rebate: 0 };
+
         if (adSpendMode === 'gmv-max') {
           const desc = row['Deskripsi'] || '';
           if (desc.includes('Deduction for Product Ad')) {
-            // Deduction is a cost. Its value in the data is negative. We want the cost to be positive.
-            dailyAdSpend = Math.abs(spendVal);
+            currentAdSpend.deduction += Math.abs(spendVal);
           } else if (desc.includes('ROAS Protection Free Ads Credit Rebate')) {
-            // Rebate is income. Its value in the data is positive. It should reduce the total ad cost.
-            dailyAdSpend = -Math.abs(spendVal);
+            currentAdSpend.rebate += Math.abs(spendVal);
           }
         } else {
-          // Top up is always a cost. The value is negative in the data for MyBalance reports.
-          dailyAdSpend = Math.abs(spendVal);
+          currentAdSpend.deduction += Math.abs(spendVal);
         }
-        adSpendByDate.set(dateStr, (adSpendByDate.get(dateStr) || 0) + dailyAdSpend);
+        adSpendByDate.set(dateStr, currentAdSpend);
       }
     });
 
-    const allDates = new Set([...profitByDate.keys(), ...adSpendByDate.keys()]);
+    const allDates = new Set([...profitByDate.keys(), ...Array.from(adSpendByDate.keys())]);
     const sortedDates = Array.from(allDates).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
     return sortedDates.map(date => {
       const estimasiProfit = profitByDate.get(date) || 0;
-      const jumlahBiayaIklan = adSpendByDate.get(date) || 0;
+      const adSpend = adSpendByDate.get(date) || { deduction: 0, rebate: 0 };
+      const jumlahBiayaIklan = adSpend.deduction - adSpend.rebate;
       const estProfitBersih = estimasiProfit - jumlahBiayaIklan;
       return {
         tanggal: date,
         estimasiProfit,
+        deduction: adSpend.deduction,
+        rebate: adSpend.rebate,
         jumlahBiayaIklan,
         estProfitBersih
       };
