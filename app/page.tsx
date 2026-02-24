@@ -216,49 +216,6 @@ export default function DashboardPage() {
     });
   }, [myBalanceReports]);
 
-  const dailyProfitData = useMemo(() => {
-    const profitByDate = new Map<string, number>();
-    const adSpendByDate = new Map<string, number>();
-
-    // Process Order All data for profit
-    rawData.forEach(row => {
-      const dateStr = row['Waktu Pesanan Dibuat']?.split(' ')[0];
-      if (dateStr) {
-        const profitStr = row['Estimasi Profit'] || '0';
-        const profit = parseFloat(profitStr.replace(/[^0-9-]/g, '')) || 0;
-        profitByDate.set(dateStr, (profitByDate.get(dateStr) || 0) + profit);
-      }
-    });
-
-    // Process Biaya Iklan data
-    isiUlangSaldoData.forEach(row => {
-      const dateStr = row['Tanggal Transaksi']?.split(' ')[0];
-      if (dateStr) {
-        const spendStr = String(row['Jumlah'] || '0');
-        // Parse the number, which might be negative
-        const spend = parseFloat(spendStr.replace(/[^0-9-]/g, '')) || 0;
-        // Add the absolute value to the total ad spend for the day, treating it as a cost
-        adSpendByDate.set(dateStr, (adSpendByDate.get(dateStr) || 0) + Math.abs(spend));
-      }
-    });
-
-    const allDates = new Set([...profitByDate.keys(), ...adSpendByDate.keys()]);
-    const sortedDates = Array.from(allDates).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
-
-    return sortedDates.map(date => {
-      const estimasiProfit = profitByDate.get(date) || 0;
-      const jumlahBiayaIklan = adSpendByDate.get(date) || 0;
-      const estProfitBersih = estimasiProfit - jumlahBiayaIklan;
-      return {
-        tanggal: date,
-        estimasiProfit,
-        jumlahBiayaIklan,
-        estProfitBersih
-      };
-    });
-
-  }, [rawData, isiUlangSaldoData]);
-
   // Apply Filters
   const filteredData = useMemo(() => {
     let data = rawData;
@@ -317,6 +274,63 @@ export default function DashboardPage() {
 
     return data;
   }, [rawData, filters, dateFilter, searchQuery]);
+
+  const dailyProfitData = useMemo(() => {
+    const profitByDate = new Map<string, number>();
+    const adSpendByDate = new Map<string, number>();
+
+    // Process Order All data for profit
+    filteredData.forEach(row => {
+      const dateStr = row['Waktu Pesanan Dibuat']?.split(' ')[0];
+      if (dateStr) {
+        const profitStr = row['Estimasi Profit'] || '0';
+        const profit = parseFloat(profitStr.replace(/[^0-9-]/g, '')) || 0;
+        profitByDate.set(dateStr, (profitByDate.get(dateStr) || 0) + profit);
+      }
+    });
+
+    // Process Biaya Iklan data
+    let filteredAdSpend = isiUlangSaldoData;
+    if (dateFilter.start || dateFilter.end) {
+      const startTs = dateFilter.start ? new Date(dateFilter.start + 'T00:00:00').getTime() : -Infinity;
+      const endTs = dateFilter.end ? new Date(dateFilter.end + 'T23:59:59').getTime() : Infinity;
+
+      filteredAdSpend = filteredAdSpend.filter((item: any) => {
+        let valToCheck = item['Tanggal Transaksi'];
+        if (!valToCheck) return false;
+        let d = new Date(valToCheck);
+        if (isNaN(d.getTime())) return false;
+        return d.getTime() >= startTs && d.getTime() <= endTs;
+      });
+    }
+
+    filteredAdSpend.forEach(row => {
+      const dateStr = row['Tanggal Transaksi']?.split(' ')[0];
+      if (dateStr) {
+        const spendStr = String(row['Jumlah'] || '0');
+        // Parse the number, which might be negative
+        const spend = parseFloat(spendStr.replace(/[^0-9-]/g, '')) || 0;
+        // Add the absolute value to the total ad spend for the day, treating it as a cost
+        adSpendByDate.set(dateStr, (adSpendByDate.get(dateStr) || 0) + Math.abs(spend));
+      }
+    });
+
+    const allDates = new Set([...profitByDate.keys(), ...adSpendByDate.keys()]);
+    const sortedDates = Array.from(allDates).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+
+    return sortedDates.map(date => {
+      const estimasiProfit = profitByDate.get(date) || 0;
+      const jumlahBiayaIklan = adSpendByDate.get(date) || 0;
+      const estProfitBersih = estimasiProfit - jumlahBiayaIklan;
+      return {
+        tanggal: date,
+        estimasiProfit,
+        jumlahBiayaIklan,
+        estProfitBersih
+      };
+    });
+
+  }, [filteredData, isiUlangSaldoData, dateFilter]);
 
   // Extract Filter Options
   const filterOptions = useMemo(() => {
