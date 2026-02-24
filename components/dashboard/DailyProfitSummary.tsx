@@ -58,7 +58,7 @@ export const DailyProfitSummary: React.FC<DailyProfitSummaryProps> = ({ data, is
             <h2 className="text-xl font-bold text-text-main tracking-tight mb-4">Daily Profit (Est.)</h2>
             <div className="overflow-x-auto max-h-96">
                 <table className="w-full text-sm text-left">
-                    <thead className="text-xs text-text-muted uppercase bg-app/40 sticky top-0">
+                    <thead className="text-xs text-text-muted uppercase bg-surface sticky top-0 border-b border-border">
                         <tr>
                             <th scope="col" className="px-4 py-3">Tanggal</th>
                             <th scope="col" className="px-4 py-3 text-right">Estimasi Profit</th>
