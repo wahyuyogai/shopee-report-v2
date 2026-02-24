@@ -311,6 +311,84 @@ export async function clearSkuMasterAction() {
   await pool.query('DELETE FROM sku_master');
 }
 
+// --- DASHBOARD ACTIONS ---
+
+export async function fetchDailyProfitAction(adSpendMode: 'top-up' | 'gmv-max'): Promise<any[]> {
+  await ensureTables();
+  const [incomeReports] = await pool.query(
+    `SELECT data, created_at FROM reports WHERE jenis_laporan = 'Income' ORDER BY created_at ASC`
+  );
+
+  const [adwordsReports] = await pool.query(
+    `SELECT data, created_at FROM reports WHERE jenis_laporan = 'Adwords Bill' ORDER BY created_at ASC`
+  );
+
+  const dailyData: { [key: string]: { estimasiProfit: number; jumlahBiayaIklan: number } } = {};
+
+  // 1. Process Income Reports for Gross Profit
+  (incomeReports as any[]).forEach(report => {
+    const data = typeof report.data === 'string' ? JSON.parse(report.data) : report.data;
+    data.forEach((row: any) => {
+      const dateStr = row['Waktu Penyelesaian Pesanan'];
+      if (!dateStr) return;
+      
+      // Simple date parsing, assuming DD/MM/YYYY format from upload
+      const parts = dateStr.split('/');
+      if (parts.length !== 3) return;
+      const date = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+      const dateKey = date.toISOString().split('T')[0];
+
+      if (!dailyData[dateKey]) {
+        dailyData[dateKey] = { estimasiProfit: 0, jumlahBiayaIklan: 0 };
+      }
+
+      const profit = parseFloat(row['Penghasilan Bersih'] || '0');
+      dailyData[dateKey].estimasiProfit += profit;
+    });
+  });
+
+  // 2. Process Adwords Bill based on mode
+  if (adSpendMode === 'gmv-max') {
+      (adwordsReports as any[]).forEach(report => {
+        const data = typeof report.data === 'string' ? JSON.parse(report.data) : report.data;
+        data.forEach((row: any) => {
+            const dateStr = row['Waktu'];
+            if (!dateStr) return;
+
+            const parts = dateStr.split('/');
+            if (parts.length !== 3) return;
+            const date = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+            const dateKey = date.toISOString().split('T')[0];
+
+            if (!dailyData[dateKey]) {
+              dailyData[dateKey] = { estimasiProfit: 0, jumlahBiayaIklan: 0 };
+            }
+            
+            const deskripsi = row['Deskripsi'] || '';
+            const jumlah = parseFloat(row['Jumlah'] || '0');
+
+            if (deskripsi.includes('Deduction for Product Ad (Auto Bidding - GMV Max)')) {
+                dailyData[dateKey].jumlahBiayaIklan += Math.abs(jumlah); // Use absolute for consistent summing
+            } else if (deskripsi.includes('ROAS Protection Free Ads Credit Rebate')) {
+                // This is a credit, so it reduces the ad spend
+                dailyData[dateKey].jumlahBiayaIklan -= jumlah;
+            }
+        });
+      });
+  }
+
+  // 3. Format for chart
+  const formattedData = Object.keys(dailyData).map(dateKey => ({
+    tanggal: dateKey,
+    estimasiProfit: dailyData[dateKey].estimasiProfit,
+    jumlahBiayaIklan: dailyData[dateKey].jumlahBiayaIklan,
+    estProfitBersih: dailyData[dateKey].estimasiProfit - dailyData[dateKey].jumlahBiayaIklan,
+  }));
+
+  return formattedData.sort((a, b) => new Date(a.tanggal).getTime() - new Date(b.tanggal).getTime());
+}
+
+
 // --- BACKUP & RESTORE ACTIONS (PRECISION MODE) ---
 
 export async function fetchFullBackupAction() {
