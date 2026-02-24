@@ -165,9 +165,19 @@ export default function FinancePage() {
         if (typeof valToCheck === 'number') d = new Date(valToCheck);
         
         if (isNaN(d.getTime())) {
-           // Try parsing simple string date
-           const parts = String(valToCheck).split(/[-/]/);
-           if (parts.length >= 3) d = new Date(`${parts[0]}-${parts[1]}-${parts[2]}`);
+           const dateStr = String(valToCheck);
+           const parts = dateStr.split('/');
+           if (parts.length === 3) {
+               // Handle D/M/YYYY and DD/MM/YYYY
+               const day = parts[0].padStart(2, '0');
+               const month = parts[1].padStart(2, '0');
+               const year = parts[2];
+               d = new Date(`${year}-${month}-${day}`);
+           } else {
+              // Try parsing simple string date
+              const parts = dateStr.split(/[-/]/);
+              if (parts.length >= 3) d = new Date(`${parts[0]}-${parts[1]}-${parts[2]}`);
+           }
         }
 
         if (isNaN(d.getTime())) return false;
