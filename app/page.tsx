@@ -381,11 +381,15 @@ export default function DashboardPage() {
         const spend = parseFloat(spendStr.replace(/[^0-9-]/g, '')) || 0;
         
         if (adSpendMode === 'gmv-max') {
-            // Rebate is positive, Deduction is negative
+            // Rebate is positive (income), Deduction is negative (cost)
+            // We want to show the total cost, so we sum up the negative values (deductions)
+            // and subtract the positive values (rebates).
+            // The final result should be positive, representing total spend.
+            const spend = row['Deskripsi'] === 'ROAS Protection Free Ads Credit Rebate' ? -Math.abs(parseFloat(spendStr.replace(/[^0-9-]/g, ''))) : Math.abs(parseFloat(spendStr.replace(/[^0-9-]/g, ''))) || 0;
             adSpendByDate.set(dateStr, (adSpendByDate.get(dateStr) || 0) + spend);
         } else {
             // Top up is always a cost (absolute value)
-            adSpendByDate.set(dateStr, (adSpendByDate.get(dateStr) || 0) + Math.abs(spend));
+            adSpendByDate.set(dateStr, (adSpendByDate.get(dateStr) || 0) + Math.abs(parseFloat(spendStr.replace(/[^0-9-]/g, '')) || 0));
         }
       }
     });
