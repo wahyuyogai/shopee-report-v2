@@ -172,6 +172,7 @@ export default function DashboardPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   const [activeAdTab, setActiveAdTab] = useState('top-up-iklan');
+  const [adSpendMode, setAdSpendMode] = useState<'top-up' | 'gmv-max'>('top-up');
 
   // -- FILTER STATES --
   const [filters, setFilters] = useState({
@@ -333,44 +334,58 @@ export default function DashboardPage() {
       }
     });
 
-    // Process Biaya Iklan data (Top Up + GMV Max)
-    let filteredAdSpend = isiUlangSaldoData;
-    let filteredGmvMax = gmvMaxBudgetData;
-    
+    // Process Biaya Iklan data based on adSpendMode
+    let adSourceData = adSpendMode === 'top-up' ? isiUlangSaldoData : gmvMaxBudgetData;
+
     if (dateFilter.start || dateFilter.end) {
       const startTs = dateFilter.start ? new Date(dateFilter.start + 'T00:00:00').getTime() : -Infinity;
       const endTs = dateFilter.end ? new Date(dateFilter.end + 'T23:59:59').getTime() : Infinity;
 
-      const dateFilterFn = (item: any) => {
-        let valToCheck = item['Tanggal Transaksi'];
+      adSourceData = adSourceData.filter((item: any) => {
+        let valToCheck = adSpendMode === 'top-up' ? item['Tanggal Transaksi'] : item['Waktu'];
         if (!valToCheck) return false;
-        let d = new Date(valToCheck);
+        
+        let d;
+        if (adSpendMode === 'gmv-max') {
+            const parts = valToCheck.split('/');
+            if (parts.length === 3) {
+                // DD/MM/YYYY to YYYY-MM-DD
+                d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+            } else {
+                d = new Date(valToCheck);
+            }
+        } else {
+            d = new Date(valToCheck);
+        }
+
         if (isNaN(d.getTime())) return false;
         return d.getTime() >= startTs && d.getTime() <= endTs;
-      };
-
-      filteredAdSpend = filteredAdSpend.filter(dateFilterFn);
-      filteredGmvMax = filteredGmvMax.filter(dateFilterFn);
+      });
     }
 
-    // Calculate Top Up Iklan
-    filteredAdSpend.forEach(row => {
-      const dateStr = row['Tanggal Transaksi']?.split(' ')[0];
-      if (dateStr) {
-        const spendStr = String(row['Jumlah'] || '0');
-        const spend = parseFloat(spendStr.replace(/[^0-9-]/g, '')) || 0;
-        adSpendByDate.set(dateStr, (adSpendByDate.get(dateStr) || 0) + Math.abs(spend));
+    adSourceData.forEach(row => {
+      let dateStr;
+      const rawDate = adSpendMode === 'top-up' ? row['Tanggal Transaksi'] : row['Waktu'];
+      if(adSpendMode === 'gmv-max') {
+        const parts = rawDate.split('/');
+        if(parts.length === 3) {
+          dateStr = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+      } else {
+        dateStr = rawDate?.split(' ')[0];
       }
-    });
 
-    // Calculate GMV Max Budget
-    filteredGmvMax.forEach(row => {
-      const dateStr = row['Tanggal Transaksi']?.split(' ')[0];
       if (dateStr) {
         const spendStr = String(row['Jumlah'] || '0');
         const spend = parseFloat(spendStr.replace(/[^0-9-]/g, '')) || 0;
-        // GMV Max is also a cost, so we add its absolute value
-        adSpendByDate.set(dateStr, (adSpendByDate.get(dateStr) || 0) + Math.abs(spend));
+        
+        if (adSpendMode === 'gmv-max') {
+            // Rebate is positive, Deduction is negative
+            adSpendByDate.set(dateStr, (adSpendByDate.get(dateStr) || 0) + spend);
+        } else {
+            // Top up is always a cost (absolute value)
+            adSpendByDate.set(dateStr, (adSpendByDate.get(dateStr) || 0) + Math.abs(spend));
+        }
       }
     });
 
@@ -389,7 +404,7 @@ export default function DashboardPage() {
       };
     });
 
-  }, [filteredData, isiUlangSaldoData, dateFilter]);
+  }, [filteredData, isiUlangSaldoData, gmvMaxBudgetData, dateFilter, adSpendMode]);
 
   // Extract Filter Options
   const filterOptions = useMemo(() => {
@@ -446,7 +461,12 @@ export default function DashboardPage() {
       {/* Main Content Area */}
       {/* Daily Profit Summary */}
       {activeTab === 'estimasi-profit' && (
-        <DailyProfitSummary data={dailyProfitData} isLoading={isLoading} />
+        <DailyProfitSummary 
+          data={dailyProfitData} 
+          isLoading={isLoading} 
+          adSpendMode={adSpendMode}
+          setAdSpendMode={setAdSpendMode}
+        />
       )}
 
       <section className="bg-surface rounded-2xl shadow-xl border border-border overflow-hidden transition-all duration-500">

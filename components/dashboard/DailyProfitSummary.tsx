@@ -13,6 +13,8 @@ interface DailyProfitData {
 interface DailyProfitSummaryProps {
   data: DailyProfitData[];
   isLoading: boolean;
+  adSpendMode: 'top-up' | 'gmv-max';
+  setAdSpendMode: (mode: 'top-up' | 'gmv-max') => void;
 }
 
 const formatCurrency = (value: number) => {
@@ -33,7 +35,7 @@ const formatDate = (dateString: string) => {
     });
 }
 
-export const DailyProfitSummary: React.FC<DailyProfitSummaryProps> = ({ data, isLoading }) => {
+export const DailyProfitSummary: React.FC<DailyProfitSummaryProps> = ({ data, isLoading, adSpendMode, setAdSpendMode }) => {
   if (isLoading) {
     return (
       <div className="bg-surface rounded-2xl shadow-xl border border-border p-4 md:p-6 mb-6">
@@ -59,7 +61,25 @@ export const DailyProfitSummary: React.FC<DailyProfitSummaryProps> = ({ data, is
   return (
     <div className="bg-surface rounded-2xl shadow-xl border border-border overflow-hidden mb-6">
         <div className="p-4 md:p-6">
-            <h2 className="text-xl font-bold text-text-main tracking-tight mb-4">Daily Profit (Est.)</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-text-main tracking-tight">Daily Profit (Est.)</h2>
+              <div className="flex items-center gap-2 p-1 rounded-full bg-background border border-border text-sm font-medium">
+                <button 
+                  onClick={() => setAdSpendMode('top-up')}
+                  className={`px-3 py-1 rounded-full transition-colors ${
+                    adSpendMode === 'top-up' ? 'bg-brand text-white shadow' : 'text-text-muted hover:bg-surface'
+                  }`}>
+                    Top Up Iklan
+                </button>
+                <button 
+                  onClick={() => setAdSpendMode('gmv-max')}
+                  className={`px-3 py-1 rounded-full transition-colors ${
+                    adSpendMode === 'gmv-max' ? 'bg-brand text-white shadow' : 'text-text-muted hover:bg-surface'
+                  }`}>
+                    GMV Max Budget
+                </button>
+              </div>
+            </div>
             <div className="overflow-x-auto max-h-96">
                 <table className="w-full text-sm text-left">
                     <thead className="text-xs text-text-muted uppercase bg-surface sticky top-0 border-b border-border">
