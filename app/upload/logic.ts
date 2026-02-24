@@ -43,6 +43,10 @@ const formatDateValue = (dateValue: any): string => {
     const day = parts[0].padStart(2, '0');
     const month = parts[1].padStart(2, '0');
     const year = parts[2];
+    // Check if the format is likely MM/DD/YYYY and swap if necessary
+    if (parseInt(month, 10) > 12) {
+        return `${month}/${day}/${year}`;
+    }
     return `${day}/${month}/${year}`;
   }
   

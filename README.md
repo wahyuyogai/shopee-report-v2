@@ -68,6 +68,12 @@ Agar sistem berjalan optimal, ikuti panduan format file berikut saat melakukan U
 
 > **Catatan**: Sistem otomatis mengekstrak **Nama Toko** (awalan nama file) dan **Bulan** (dari kode tanggal YYYYMMDD) untuk metadata.
 
+### D. Normalisasi Data (Penting)
+
+Sistem secara otomatis melakukan normalisasi pada kolom-kolom tertentu untuk menjaga konsistensi data:
+
+*   **Tanggal (Kolom 'Waktu' di Adwords Bill)**: Karena laporan mentah Adwords Bill seringkali memiliki format tanggal yang tidak konsisten (misalnya, `DD/MM/YYYY`, `D/M/YYYY`, atau format angka Excel), sistem akan secara otomatis mengonversi semua variasi ini ke format standar `DD/MM/YYYY` saat proses upload. Hal ini memastikan bahwa pemfilteran, pengurutan, dan kalkulasi data di seluruh aplikasi (termasuk di Dashboard dan Finance) berjalan akurat dan bebas dari error.
+
 ### C. SKU Master
 Upload file Excel di menu **SKU Manager** dengan header:
 `SKU1`, `SKU2`, `Harga`, `ID Produk`.
