@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { fetchDailyProfitAction } from '@/app/actions'; // Import the new action
 
 interface DailyProfitData {
   tanggal: string;
@@ -11,7 +10,12 @@ interface DailyProfitData {
   estProfitBersih: number;
 }
 
-interface DailyProfitSummaryProps {}
+interface DailyProfitSummaryProps {
+  data: DailyProfitData[];
+  isLoading: boolean;
+  adSpendMode: 'top-up' | 'gmv-max';
+  setAdSpendMode: (mode: 'top-up' | 'gmv-max') => void;
+}
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('id-ID', {
@@ -31,28 +35,7 @@ const formatDate = (dateString: string) => {
     });
 }
 
-export const DailyProfitSummary: React.FC<DailyProfitSummaryProps> = () => {
-  const [data, setData] = useState<DailyProfitData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [adSpendMode, setAdSpendMode] = useState<'top-up' | 'gmv-max'>('gmv-max');
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const result = await fetchDailyProfitAction(adSpendMode);
-        setData(result);
-      } catch (error) {
-        console.error('Failed to fetch daily profit:', error);
-        setData([]); // Clear data on error
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [adSpendMode]);
-
+export const DailyProfitSummary: React.FC<DailyProfitSummaryProps> = ({ data, isLoading, adSpendMode, setAdSpendMode }) => {
   if (isLoading) {
     return (
       <div className="bg-surface rounded-2xl shadow-xl border border-border p-4 md:p-6 mb-6">
