@@ -207,8 +207,9 @@ export default function DashboardPage() {
 
     // Sort by 'Tanggal Transaksi' ascending (older first)
     return filtered.sort((a, b) => {
-      const dateA = new Date(a['Tanggal Transaksi'].split('-').reverse().join('-'));
-      const dateB = new Date(b['Tanggal Transaksi'].split('-').reverse().join('-'));
+      // The date format is 'YYYY-MM-DD HH:MM:SS', which can be parsed directly.
+      const dateA = new Date(a['Tanggal Transaksi']);
+      const dateB = new Date(b['Tanggal Transaksi']);
       return dateA.getTime() - dateB.getTime();
     });
   }, [myBalanceReports]);
