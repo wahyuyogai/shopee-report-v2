@@ -46,7 +46,10 @@ const formatDateValue = (dateValue: any): string => {
   if (parts.length === 3) {
     const day = parts[0].padStart(2, '0');
     const month = parts[1].padStart(2, '0');
-    const year = parts[2];
+    let year = parts[2];
+    if (year.length === 2) {
+      year = '20' + year;
+    }
 
     // Basic validation
     if (year.length >= 4 && parseInt(month) > 0 && parseInt(month) <= 12 && parseInt(day) > 0 && parseInt(day) <= 31) {
