@@ -378,19 +378,23 @@ export default function DashboardPage() {
 
       if (dateStr) {
         const spendStr = String(row['Jumlah'] || '0');
-        const spend = parseFloat(spendStr.replace(/[^0-9-]/g, '')) || 0;
+        const spendVal = parseFloat(spendStr.replace(/[^0-9-]/g, '')) || 0;
         
+        let dailyAdSpend = 0;
         if (adSpendMode === 'gmv-max') {
-            // Rebate is positive (income), Deduction is negative (cost)
-            // We want to show the total cost, so we sum up the negative values (deductions)
-            // and subtract the positive values (rebates).
-            // The final result should be positive, representing total spend.
-            const spend = row['Deskripsi'] === 'ROAS Protection Free Ads Credit Rebate' ? -Math.abs(parseFloat(spendStr.replace(/[^0-9-]/g, ''))) : Math.abs(parseFloat(spendStr.replace(/[^0-9-]/g, ''))) || 0;
-            adSpendByDate.set(dateStr, (adSpendByDate.get(dateStr) || 0) + spend);
+          const desc = row['Deskripsi'] || '';
+          if (desc.includes('Deduction for Product Ad')) {
+            // Deduction is a cost. Its value in the data is negative. We want the cost to be positive.
+            dailyAdSpend = Math.abs(spendVal);
+          } else if (desc.includes('ROAS Protection Free Ads Credit Rebate')) {
+            // Rebate is income. Its value in the data is positive. It should reduce the total ad cost.
+            dailyAdSpend = -Math.abs(spendVal);
+          }
         } else {
-            // Top up is always a cost (absolute value)
-            adSpendByDate.set(dateStr, (adSpendByDate.get(dateStr) || 0) + Math.abs(parseFloat(spendStr.replace(/[^0-9-]/g, '')) || 0));
+          // Top up is always a cost. The value is negative in the data for MyBalance reports.
+          dailyAdSpend = Math.abs(spendVal);
         }
+        adSpendByDate.set(dateStr, (adSpendByDate.get(dateStr) || 0) + dailyAdSpend);
       }
     });
 
