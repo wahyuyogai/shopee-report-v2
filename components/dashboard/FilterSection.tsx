@@ -8,18 +8,21 @@ interface FilterSectionProps {
     status: string[];
     toko: string;
     type: string;
-    bulan: string[]; // Changed to array
+    bulan: string[];
+    orderStatus: string[];
   };
   setFilters: React.Dispatch<React.SetStateAction<{
     status: string[];
     toko: string;
     type: string;
-    bulan: string[]; // Changed to array
+    bulan: string[];
+    orderStatus: string[];
   }>>;
   filterOptions: {
     toko: string[];
     type: string[];
     bulan: string[];
+    orderStatus: string[];
   };
   claimStatusOptions: string[];
   statusCounts?: Record<string, number>; // New prop
@@ -67,6 +70,14 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
             multiple={true}
             placeholder="Semua Bulan"
             onChange={(val) => setFilters(prev => ({ ...prev, bulan: val }))}
+          />
+          <FilterSelect
+            label="Status Pesanan (Multi)"
+            value={filters.orderStatus}
+            options={filterOptions.orderStatus}
+            multiple={true}
+            placeholder="Semua Status Pesanan"
+            onChange={(val) => setFilters(prev => ({ ...prev, orderStatus: val }))}
           />
         </div>
     </div>

@@ -169,7 +169,8 @@ export default function DashboardPage() {
     status: [] as string[],
     toko: '',
     type: '',
-    bulan: [] as string[]
+    bulan: [] as string[],
+    orderStatus: [] as string[],
   });
 
   // -- DATE FILTER STATE --
@@ -269,6 +270,17 @@ export default function DashboardPage() {
     // Status Filter
     if (filters.status && filters.status.length > 0) data = data.filter(item => filters.status.includes(item['Claim Status']));
 
+    // Order Status Filter
+    if (filters.orderStatus && filters.orderStatus.length > 0) {
+      data = data.filter(item => {
+        let statusPesanan = item['Status Pesanan'];
+        if (statusPesanan && statusPesanan.startsWith('Pesanan diterima, namun Pembeli masih dapat mengajukan pengembalian')) {
+          statusPesanan = 'Pesanan diterima...';
+        }
+        return filters.orderStatus.includes(statusPesanan);
+      });
+    }
+
     // Date Filter
     if (dateFilter.column && (dateFilter.start || dateFilter.end)) {
       const startTs = dateFilter.start ? new Date(dateFilter.start + 'T00:00:00').getTime() : -Infinity;
@@ -311,17 +323,27 @@ export default function DashboardPage() {
     const tokos = new Set<string>();
     const types = new Set<string>();
     const bulans = new Set<string>();
+    const orderStatuses = new Set<string>();
 
     rawData.forEach(row => {
       if (row['Nama Toko']) tokos.add(row['Nama Toko']);
       if (row['Type Laporan']) types.add(row['Type Laporan']);
       if (row['Bulan Laporan']) bulans.add(row['Bulan Laporan']);
+      
+      let statusPesanan = row['Status Pesanan'];
+      if (statusPesanan) {
+        if (statusPesanan.startsWith('Pesanan diterima, namun Pembeli masih dapat mengajukan pengembalian')) {
+          statusPesanan = 'Pesanan diterima...';
+        }
+        orderStatuses.add(statusPesanan);
+      }
     });
 
     return {
       toko: Array.from(tokos).sort(),
       type: Array.from(types).sort(),
-      bulan: Array.from(bulans).sort()
+      bulan: Array.from(bulans).sort(),
+      orderStatus: Array.from(orderStatuses).sort(),
     };
   }, [rawData]);
 
