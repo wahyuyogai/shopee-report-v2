@@ -31,7 +31,6 @@ export function LayoutShell({ children }: LayoutShellProps) {
     if (path === '/') return 'Dashboard';
     if (path === '/return') return 'Return';
     if (path === '/finance') return 'Finance';
-    if (path === '/analisa') return 'Analisa';
     if (path === '/upload') return 'Upload Manager';
     if (path === '/sku-manager') return 'SKU Manager';
     if (path === '/logs') return 'Activity Logs';

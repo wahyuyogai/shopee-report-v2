@@ -31,12 +31,6 @@ export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
       icon: <TrendingUp size={20} />,
       roles: ['super_admin', 'guest']
     },
-    {
-      path: '/analisa',
-      label: 'Analisa',
-      icon: <TrendingUp size={20} />,
-      roles: ['super_admin', 'guest']
-    },
     { 
       path: '/return', 
       label: 'Return', 
