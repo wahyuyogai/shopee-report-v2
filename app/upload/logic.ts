@@ -108,6 +108,13 @@ export const processFileBuffer = (
       namaToko = parts[0].trim();
     } else if (fileName.startsWith('Export-') || fileName.startsWith('Return-App-Export')) {
       namaToko = 'Exported Data'; 
+    } else if (isFilenameAdwordsBill) {
+      const match = fileName.match(/(.*?)_adwords_bill/i);
+      if (match && match[1]) {
+        namaToko = match[1].toUpperCase();
+      } else {
+        namaToko = 'Unknown';
+      }
     } else {
       namaToko = 'Unknown';
     }

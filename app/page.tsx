@@ -168,8 +168,10 @@ const getEnrichedData = (reports: any[], skuMap: Map<string, any>, feeToggles: a
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('estimasi-profit');
   const [searchQuery, setSearchQuery] = useState('');
-  const { orderAllReports, myBalanceReports, skuMasterData, isLoading, updateReportRowStatus, updateBulkStatus } = useData();
+  const { orderAllReports, myBalanceReports, adwordsBillReports, skuMasterData, isLoading, updateReportRowStatus, updateBulkStatus } = useData();
   const [showFilters, setShowFilters] = useState(false);
+
+  const [activeAdTab, setActiveAdTab] = useState('top-up-iklan');
 
   // -- FILTER STATES --
   const [filters, setFilters] = useState({
@@ -236,6 +238,27 @@ export default function DashboardPage() {
       return dateA.getTime() - dateB.getTime();
     });
   }, [myBalanceReports, filters.toko]);
+
+  const gmvMaxBudgetData = useMemo(() => {
+    let filtered = adwordsBillReports.flatMap((report: any) => report.data)
+      .filter((row: any) => {
+        const desc = row['Deskripsi'] || '';
+        return desc === 'Deduction for Product Ad (Auto Bidding - GMV Max)' || 
+               desc === 'ROAS Protection Free Ads Credit Rebate';
+      });
+
+    if (filters.toko) {
+      filtered = filtered.filter((row: any) => row['Nama Toko'] === filters.toko);
+    }
+
+    // Sort by 'Tanggal Transaksi' ascending (older first)
+    return filtered.sort((a, b) => {
+      // The date format is 'YYYY-MM-DD HH:MM:SS', which can be parsed directly.
+      const dateA = new Date(a['Tanggal Transaksi']);
+      const dateB = new Date(b['Tanggal Transaksi']);
+      return dateA.getTime() - dateB.getTime();
+    });
+  }, [adwordsBillReports, filters.toko]);
 
   // Apply Filters
   const filteredData = useMemo(() => {
@@ -310,28 +333,43 @@ export default function DashboardPage() {
       }
     });
 
-    // Process Biaya Iklan data
+    // Process Biaya Iklan data (Top Up + GMV Max)
     let filteredAdSpend = isiUlangSaldoData;
+    let filteredGmvMax = gmvMaxBudgetData;
+    
     if (dateFilter.start || dateFilter.end) {
       const startTs = dateFilter.start ? new Date(dateFilter.start + 'T00:00:00').getTime() : -Infinity;
       const endTs = dateFilter.end ? new Date(dateFilter.end + 'T23:59:59').getTime() : Infinity;
 
-      filteredAdSpend = filteredAdSpend.filter((item: any) => {
+      const dateFilterFn = (item: any) => {
         let valToCheck = item['Tanggal Transaksi'];
         if (!valToCheck) return false;
         let d = new Date(valToCheck);
         if (isNaN(d.getTime())) return false;
         return d.getTime() >= startTs && d.getTime() <= endTs;
-      });
+      };
+
+      filteredAdSpend = filteredAdSpend.filter(dateFilterFn);
+      filteredGmvMax = filteredGmvMax.filter(dateFilterFn);
     }
 
+    // Calculate Top Up Iklan
     filteredAdSpend.forEach(row => {
       const dateStr = row['Tanggal Transaksi']?.split(' ')[0];
       if (dateStr) {
         const spendStr = String(row['Jumlah'] || '0');
-        // Parse the number, which might be negative
         const spend = parseFloat(spendStr.replace(/[^0-9-]/g, '')) || 0;
-        // Add the absolute value to the total ad spend for the day, treating it as a cost
+        adSpendByDate.set(dateStr, (adSpendByDate.get(dateStr) || 0) + Math.abs(spend));
+      }
+    });
+
+    // Calculate GMV Max Budget
+    filteredGmvMax.forEach(row => {
+      const dateStr = row['Tanggal Transaksi']?.split(' ')[0];
+      if (dateStr) {
+        const spendStr = String(row['Jumlah'] || '0');
+        const spend = parseFloat(spendStr.replace(/[^0-9-]/g, '')) || 0;
+        // GMV Max is also a cost, so we add its absolute value
         adSpendByDate.set(dateStr, (adSpendByDate.get(dateStr) || 0) + Math.abs(spend));
       }
     });
@@ -506,19 +544,45 @@ export default function DashboardPage() {
 
       </section>
 
-      {/* Isi Ulang Saldo Table */}
+      {/* Biaya Iklan Section */}
       <section className="bg-surface rounded-2xl shadow-xl border border-border overflow-hidden transition-all duration-500">
         <div className="p-4 md:p-6">
           <h2 className="text-xl font-bold text-text-main tracking-tight mb-4">Biaya Iklan</h2>
+          
+          <div className="flex gap-2 mb-4 border-b border-border">
+            <button
+              onClick={() => setActiveAdTab('top-up-iklan')}
+              className={`px-4 py-2 font-medium text-sm transition-colors relative ${
+                activeAdTab === 'top-up-iklan' ? 'text-brand' : 'text-text-muted hover:text-text-main'
+              }`}
+            >
+              Top Up Iklan
+              {activeAdTab === 'top-up-iklan' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand rounded-t-full" />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveAdTab('gmv-max-budget')}
+              className={`px-4 py-2 font-medium text-sm transition-colors relative ${
+                activeAdTab === 'gmv-max-budget' ? 'text-brand' : 'text-text-muted hover:text-text-main'
+              }`}
+            >
+              GMV Max Budget
+              {activeAdTab === 'gmv-max-budget' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand rounded-t-full" />
+              )}
+            </button>
+          </div>
+
           <DashboardTable
-            data={isiUlangSaldoData}
+            data={activeAdTab === 'top-up-iklan' ? isiUlangSaldoData : gmvMaxBudgetData}
             isLoading={isLoading}
             searchQuery={''}
             isExporting={false}
             onExport={() => {}}
             onUpdateStatus={() => {}}
             onBulkUpdateStatus={() => {}}
-            tableId="isi-ulang-saldo"
+            tableId={activeAdTab === 'top-up-iklan' ? "isi-ulang-saldo" : "gmv-max-budget"}
           />
         </div>
       </section>
