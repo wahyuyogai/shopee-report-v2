@@ -11,7 +11,7 @@ import { DailyProfitSummary } from '../components/dashboard/DailyProfitSummary';
 import { DATE_FILTER_COLUMNS, CLAIM_STATUS_OPTIONS } from '../lib/constants';
 
 // Helper to enrich data (copied from FinancePage for consistency)
-const getEnrichedData = (reports: any[], skuMap: Map<string, any>) => {
+const getEnrichedData = (reports: any[], skuMap: Map<string, any>, feeToggles: any) => {
   // First pass: Count rows per Order ID to distribute fixed costs
   const orderCounts = new Map<string, number>();
   reports.forEach(r => {
@@ -109,19 +109,26 @@ const getEnrichedData = (reports: any[], skuMap: Map<string, any>) => {
             const revenueBase = (hargaSetelahDiskon * qty) - voucherRow;
             revenueBaseStr = revenueBase.toLocaleString('id-ID', { maximumFractionDigits: 0 });
             
-            // Calculate components with rounding
-            const adminFee = Math.round(revenueBase * 0.0825);
-            const freeShipFee = Math.round(revenueBase * 0.05);
-            const promoFee = Math.round(revenueBase * 0.045);
-            const premiFee = Math.round(revenueBase * 0.005);
+            // Calculate components with rounding or read from columns
+            let adminFee = row['Admin Shopee 8.25%'] !== undefined ? parseFloat(String(row['Admin Shopee 8.25%']).replace(/\./g, '').replace(/,/g, '.')) || 0 : Math.round(revenueBase * 0.0825);
+            let freeShipFee = row['Gratis Ongkir Xtra 5%'] !== undefined ? parseFloat(String(row['Gratis Ongkir Xtra 5%']).replace(/\./g, '').replace(/,/g, '.')) || 0 : Math.round(revenueBase * 0.05);
+            let promoFee = row['Promo Xtra 4.5%'] !== undefined ? parseFloat(String(row['Promo Xtra 4.5%']).replace(/\./g, '').replace(/,/g, '.')) || 0 : Math.round(revenueBase * 0.045);
+            let premiFee = row['Biaya Premi 0.5%'] !== undefined ? parseFloat(String(row['Biaya Premi 0.5%']).replace(/\./g, '').replace(/,/g, '.')) || 0 : Math.round(revenueBase * 0.005);
+            let txFeeRowCalc = row['Biaya Per Transaksi Rp. 1,250'] !== undefined ? parseFloat(String(row['Biaya Per Transaksi Rp. 1,250']).replace(/\./g, '').replace(/,/g, '.')) || 0 : txFeeRow;
+
+            if (!feeToggles.admin) adminFee = 0;
+            if (!feeToggles.freeShip) freeShipFee = 0;
+            if (!feeToggles.promo) promoFee = 0;
+            if (!feeToggles.premi) premiFee = 0;
+            if (!feeToggles.tx) txFeeRowCalc = 0;
             
             adminFeeStr = adminFee.toLocaleString('id-ID');
             freeShipFeeStr = freeShipFee.toLocaleString('id-ID');
             promoFeeStr = promoFee.toLocaleString('id-ID');
             premiFeeStr = premiFee.toLocaleString('id-ID');
-            txFeeRowStr = txFeeRow.toLocaleString('id-ID', { maximumFractionDigits: 0 });
+            txFeeRowStr = txFeeRowCalc.toLocaleString('id-ID', { maximumFractionDigits: 0 });
 
-            const totalFees = adminFee + freeShipFee + promoFee + premiFee + txFeeRow;
+            const totalFees = adminFee + freeShipFee + promoFee + premiFee + txFeeRowCalc;
 
             biayaLainnyaStr = totalFees.toLocaleString('id-ID', { maximumFractionDigits: 0 });
 
@@ -182,6 +189,14 @@ export default function DashboardPage() {
     end: ''
   });
 
+  const [feeToggles, setFeeToggles] = useState({
+    admin: true,
+    freeShip: true,
+    promo: true,
+    premi: true,
+    tx: true,
+  });
+
   const tabs = [
     { id: 'estimasi-profit', label: 'Estimasi Profit', icon: <BarChart3 size={16} />, color: 'text-brand' },
   ];
@@ -200,10 +215,10 @@ export default function DashboardPage() {
 
   const rawData = useMemo(() => {
     if (activeTab === 'estimasi-profit') {
-      return getEnrichedData(orderAllReports, skuMap);
+      return getEnrichedData(orderAllReports, skuMap, feeToggles);
     }
     return [];
-  }, [activeTab, orderAllReports, skuMap]);
+  }, [activeTab, orderAllReports, skuMap, feeToggles]);
 
   const isiUlangSaldoData = useMemo(() => {
     const filtered = myBalanceReports.flatMap((report: any) => report.data)
@@ -459,6 +474,8 @@ export default function DashboardPage() {
                setFilters={setFilters}
                filterOptions={filterOptions}
                claimStatusOptions={CLAIM_STATUS_OPTIONS}
+               feeToggles={feeToggles}
+               setFeeToggles={setFeeToggles}
              />
              <DateFilterSection
                dateFilter={dateFilter}

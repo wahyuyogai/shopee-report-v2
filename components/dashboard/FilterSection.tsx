@@ -26,6 +26,20 @@ interface FilterSectionProps {
   };
   claimStatusOptions: string[];
   statusCounts?: Record<string, number>; // New prop
+  feeToggles: {
+    admin: boolean;
+    freeShip: boolean;
+    promo: boolean;
+    premi: boolean;
+    tx: boolean;
+  };
+  setFeeToggles: React.Dispatch<React.SetStateAction<{
+    admin: boolean;
+    freeShip: boolean;
+    promo: boolean;
+    premi: boolean;
+    tx: boolean;
+  }>>;
 }
 
 export const FilterSection: React.FC<FilterSectionProps> = ({
@@ -33,7 +47,9 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
   setFilters,
   filterOptions,
   claimStatusOptions,
-  statusCounts
+  statusCounts,
+  feeToggles,
+  setFeeToggles
 }) => {
   return (
     <div className="p-5 border-b border-border bg-surface/50">
@@ -79,6 +95,34 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
             placeholder="Semua Status Pesanan"
             onChange={(val) => setFilters(prev => ({ ...prev, orderStatus: val }))}
           />
+        </div>
+
+        <div className="mt-6 pt-4 border-t border-border">
+          <div className="flex items-center gap-2 mb-3 text-brand">
+            <h3 className="text-xs font-bold uppercase tracking-wider">Komponen Biaya Lainnya</h3>
+          </div>
+          <div className="flex flex-wrap gap-4">
+            <label className="flex items-center gap-2 text-sm text-text-main cursor-pointer">
+              <input type="checkbox" checked={feeToggles.admin} onChange={(e) => setFeeToggles(prev => ({ ...prev, admin: e.target.checked }))} className="rounded border-border text-brand focus:ring-brand" />
+              Admin Shopee 8.25%
+            </label>
+            <label className="flex items-center gap-2 text-sm text-text-main cursor-pointer">
+              <input type="checkbox" checked={feeToggles.freeShip} onChange={(e) => setFeeToggles(prev => ({ ...prev, freeShip: e.target.checked }))} className="rounded border-border text-brand focus:ring-brand" />
+              Gratis Ongkir Xtra 5%
+            </label>
+            <label className="flex items-center gap-2 text-sm text-text-main cursor-pointer">
+              <input type="checkbox" checked={feeToggles.promo} onChange={(e) => setFeeToggles(prev => ({ ...prev, promo: e.target.checked }))} className="rounded border-border text-brand focus:ring-brand" />
+              Promo Xtra 4.5%
+            </label>
+            <label className="flex items-center gap-2 text-sm text-text-main cursor-pointer">
+              <input type="checkbox" checked={feeToggles.premi} onChange={(e) => setFeeToggles(prev => ({ ...prev, premi: e.target.checked }))} className="rounded border-border text-brand focus:ring-brand" />
+              Biaya Premi 0.5%
+            </label>
+            <label className="flex items-center gap-2 text-sm text-text-main cursor-pointer">
+              <input type="checkbox" checked={feeToggles.tx} onChange={(e) => setFeeToggles(prev => ({ ...prev, tx: e.target.checked }))} className="rounded border-border text-brand focus:ring-brand" />
+              Biaya Per Transaksi Rp. 1,250
+            </label>
+          </div>
         </div>
     </div>
   );
