@@ -29,40 +29,40 @@ const validateColumns = (data: any[], required: string[]) => {
 const formatDateValue = (dateValue: any): string => {
   if (!dateValue) return '';
 
+  // 1. Handle Excel numeric date format using XLSX library
   if (typeof dateValue === 'number') {
-    const excelEpoch = new Date(Date.UTC(1899, 11, 30));
-    const date = new Date(excelEpoch.getTime() + dateValue * 24 * 60 * 60 * 1000);
-    if (!isNaN(date.getTime())) {
-      return date.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    const date = XLSX.SSF.parse_date_code(dateValue);
+    if (date) {
+      const day = String(date.d).padStart(2, '0');
+      const month = String(date.m).padStart(2, '0');
+      const year = date.y;
+      return `${day}/${month}/${year}`;
     }
   }
 
+  // 2. Handle string formats (DD/MM/YYYY or D/M/YYYY)
   const dateStr = String(dateValue);
   const parts = dateStr.split('/');
   if (parts.length === 3) {
-    const p1 = parseInt(parts[0], 10);
-    const p2 = parseInt(parts[1], 10);
-    const year = parseInt(parts[2], 10);
-    let day, month;
-
-    if (p1 > 12) { // First part is day, must be DD/MM/YYYY
-        day = p1;
-        month = p2;
-    } else if (p2 > 12) { // Second part is day, must be MM/DD/YYYY
-        day = p2;
-        month = p1;
-    } else { // Ambiguous, assume DD/MM/YYYY as per locale
-        day = p1;
-        month = p2;
+    const day = parts[0].padStart(2, '0');
+    const month = parts[1].padStart(2, '0');
+    const year = parts[2];
+    // Basic validation to ensure it's a plausible date string
+    if (parseInt(day) > 0 && parseInt(month) > 0 && year.length >= 4) {
+       return `${day}/${month}/${year}`;
     }
-    return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
   }
   
+  // 3. Fallback for other valid date strings that JS can parse
   const d = new Date(dateStr);
   if (!isNaN(d.getTime())) {
-    return d.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
   }
 
+  // 4. If all else fails, return the original string
   return dateStr;
 };
 
