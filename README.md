@@ -72,7 +72,11 @@ Agar sistem berjalan optimal, ikuti panduan format file berikut saat melakukan U
 
 Sistem secara otomatis melakukan normalisasi pada kolom-kolom tertentu untuk menjaga konsistensi data:
 
-*   **Tanggal (Kolom 'Waktu' di Adwords Bill)**: Karena laporan mentah Adwords Bill seringkali memiliki format tanggal yang tidak konsisten (misalnya, `DD/MM/YYYY`, `D/M/YYYY`, atau format angka Excel), sistem akan secara otomatis mengonversi semua variasi ini ke format standar `DD/MM/YYYY` saat proses upload. Hal ini memastikan bahwa pemfilteran, pengurutan, dan kalkulasi data di seluruh aplikasi (termasuk di Dashboard dan Finance) berjalan akurat dan bebas dari error.
+*   **Tanggal (Kolom 'Waktu' di Adwords Bill)**: Laporan mentah Adwords Bill seringkali memiliki format tanggal yang sangat tidak konsisten (misalnya, `D/M/YY`, `DD/MM/YYYY`, atau format angka Excel). Sistem secara cerdas menangani semua variasi ini saat proses upload:
+    *   Membaca semua data tanggal sebagai teks yang diformat untuk mencegah konversi otomatis yang salah.
+    *   Mengonversi format tahun dua digit (`YY`) menjadi empat digit (`YYYY`).
+    *   Menambahkan `padding` nol untuk hari dan bulan (`D/M` menjadi `DD/MM`).
+    *   Hasil akhirnya adalah format `DD/MM/YYYY` yang bersih dan seragam, memastikan akurasi pemfilteran, pengurutan, dan kalkulasi di seluruh aplikasi.
 
 ### C. SKU Master
 Upload file Excel di menu **SKU Manager** dengan header:
