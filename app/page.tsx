@@ -234,8 +234,10 @@ export default function DashboardPage() {
       const dateStr = row['Tanggal Transaksi']?.split(' ')[0];
       if (dateStr) {
         const spendStr = String(row['Jumlah'] || '0');
+        // Parse the number, which might be negative
         const spend = parseFloat(spendStr.replace(/[^0-9-]/g, '')) || 0;
-        adSpendByDate.set(dateStr, (adSpendByDate.get(dateStr) || 0) + spend);
+        // Add the absolute value to the total ad spend for the day, treating it as a cost
+        adSpendByDate.set(dateStr, (adSpendByDate.get(dateStr) || 0) + Math.abs(spend));
       }
     });
 
