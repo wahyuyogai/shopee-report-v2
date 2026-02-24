@@ -40,14 +40,16 @@ const formatDateValue = (dateValue: any): string => {
   const dateStr = String(dateValue);
   const parts = dateStr.split('/');
   if (parts.length === 3) {
-    const day = parts[0].padStart(2, '0');
-    const month = parts[1].padStart(2, '0');
-    const year = parts[2];
-    // Check if the format is likely MM/DD/YYYY and swap if necessary
-    if (parseInt(month, 10) > 12) {
-        return `${month}/${day}/${year}`;
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const year = parseInt(parts[2], 10);
+
+    if (month > 12 && day <= 12) {
+      // Likely MM/DD/YYYY, swap them
+      return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
     }
-    return `${day}/${month}/${year}`;
+    
+    return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
   }
   
   const d = new Date(dateStr);
