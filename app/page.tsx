@@ -220,8 +220,8 @@ export default function DashboardPage() {
     const profitByDate = new Map<string, number>();
     const adSpendByDate = new Map<string, number>();
 
-    // Process Order All data for profit
-    rawData.forEach(row => {
+    // Process Order All data for profit from the already filtered data
+    filteredData.forEach(row => {
       const dateStr = row['Waktu Pesanan Dibuat']?.split(' ')[0];
       if (dateStr) {
         const profitStr = row['Estimasi Profit'] || '0';
@@ -230,14 +230,13 @@ export default function DashboardPage() {
       }
     });
 
-    // Process Biaya Iklan data
+    // Process Biaya Iklan data (this should also be filtered if applicable)
+    // For now, we assume isiUlangSaldoData is not affected by the main filters.
     isiUlangSaldoData.forEach(row => {
       const dateStr = row['Tanggal Transaksi']?.split(' ')[0];
       if (dateStr) {
         const spendStr = String(row['Jumlah'] || '0');
-        // Parse the number, which might be negative
         const spend = parseFloat(spendStr.replace(/[^0-9-]/g, '')) || 0;
-        // Add the absolute value to the total ad spend for the day, treating it as a cost
         adSpendByDate.set(dateStr, (adSpendByDate.get(dateStr) || 0) + Math.abs(spend));
       }
     });
@@ -257,7 +256,7 @@ export default function DashboardPage() {
       };
     });
 
-  }, [rawData, isiUlangSaldoData]);
+  }, [filteredData, isiUlangSaldoData]);
 
   // Apply Filters
   const filteredData = useMemo(() => {
