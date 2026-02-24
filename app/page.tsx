@@ -7,6 +7,7 @@ import { useData } from '../components/DataProvider';
 import { DashboardTable } from '../components/DashboardTable';
 import { FilterSection } from '../components/dashboard/FilterSection';
 import { DateFilterSection } from '../components/dashboard/DateFilterSection';
+import { DailyProfitSummary } from '../components/dashboard/DailyProfitSummary';
 import { DATE_FILTER_COLUMNS, CLAIM_STATUS_OPTIONS } from '../lib/constants';
 
 // Helper to enrich data (copied from FinancePage for consistency)
@@ -214,6 +215,47 @@ export default function DashboardPage() {
     });
   }, [myBalanceReports]);
 
+  const dailyProfitData = useMemo(() => {
+    const profitByDate = new Map<string, number>();
+    const adSpendByDate = new Map<string, number>();
+
+    // Process Order All data for profit
+    rawData.forEach(row => {
+      const dateStr = row['Waktu Pesanan Dibuat']?.split(' ')[0];
+      if (dateStr) {
+        const profitStr = row['Estimasi Profit'] || '0';
+        const profit = parseFloat(profitStr.replace(/[^0-9-]/g, '')) || 0;
+        profitByDate.set(dateStr, (profitByDate.get(dateStr) || 0) + profit);
+      }
+    });
+
+    // Process Biaya Iklan data
+    isiUlangSaldoData.forEach(row => {
+      const dateStr = row['Tanggal Transaksi']?.split(' ')[0];
+      if (dateStr) {
+        const spendStr = row['Jumlah'] || '0';
+        const spend = parseFloat(spendStr.replace(/[^0-9-]/g, '')) || 0;
+        adSpendByDate.set(dateStr, (adSpendByDate.get(dateStr) || 0) + spend);
+      }
+    });
+
+    const allDates = new Set([...profitByDate.keys(), ...adSpendByDate.keys()]);
+    const sortedDates = Array.from(allDates).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+
+    return sortedDates.map(date => {
+      const estimasiProfit = profitByDate.get(date) || 0;
+      const jumlahBiayaIklan = adSpendByDate.get(date) || 0;
+      const estProfitBersih = estimasiProfit - jumlahBiayaIklan;
+      return {
+        tanggal: date,
+        estimasiProfit,
+        jumlahBiayaIklan,
+        estProfitBersih
+      };
+    });
+
+  }, [rawData, isiUlangSaldoData]);
+
   // Apply Filters
   const filteredData = useMemo(() => {
     let data = rawData;
@@ -295,6 +337,11 @@ export default function DashboardPage() {
       </div>
 
       {/* Main Content Area */}
+      {/* Daily Profit Summary */}
+      {activeTab === 'estimasi-profit' && (
+        <DailyProfitSummary data={dailyProfitData} isLoading={isLoading} />
+      )}
+
       <section className="bg-surface rounded-2xl shadow-xl border border-border overflow-hidden transition-all duration-500">
 
         {/* Tab Navigation */}
