@@ -9,10 +9,7 @@ interface SkuAnalysisData {
   skuFinal: string;
   totalPesanan: number;
   totalKuantitas: number;
-  totalBelanja: number;
   estimasiProfit: number;
-  rataRataBelanja: number;
-  rataRataProfit: number;
 }
 
 interface SkuAnalysisTableProps {
@@ -87,9 +84,6 @@ export const SkuAnalysisTable: React.FC<SkuAnalysisTableProps> = ({ data, isLoad
                         <SortableHeader column="skuFinal" label="SKU Final" />
                         <SortableHeader column="totalPesanan" label="Total Pesanan" />
                         <SortableHeader column="totalKuantitas" label="Total Kuantitas" />
-                        <SortableHeader column="totalBelanja" label="Total Belanja" />
-                        <SortableHeader column="rataRataBelanja" label="Rata-rata Belanja" />
-                        <SortableHeader column="rataRataProfit" label="Rata-rata Profit" />
                         <SortableHeader column="estimasiProfit" label="Estimasi Profit" />
                     </tr>
                 </thead>
@@ -99,9 +93,6 @@ export const SkuAnalysisTable: React.FC<SkuAnalysisTableProps> = ({ data, isLoad
                             <td className="px-4 py-3 font-medium text-text-main whitespace-nowrap">{item.skuFinal}</td>
                             <td className="px-4 py-3 text-center">{item.totalPesanan}</td>
                             <td className="px-4 py-3 text-center">{item.totalKuantitas}</td>
-                            <td className="px-4 py-3 text-right">{formatCurrency(item.totalBelanja)}</td>
-                            <td className="px-4 py-3 text-right">{formatCurrency(item.rataRataBelanja)}</td>
-                            <td className={`px-4 py-3 font-bold text-right ${item.rataRataProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>{formatCurrency(item.rataRataProfit)}</td>
                             <td className={`px-4 py-3 font-bold text-right ${item.estimasiProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>{formatCurrency(item.estimasiProfit)}</td>
                         </tr>
                     ))}

@@ -2,8 +2,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { BarChart3, Search, Filter, Download } from 'lucide-react';
-import * as XLSX from 'xlsx';
+import { BarChart3, Search, Filter } from 'lucide-react';
 import { useData } from '../components/DataProvider';
 import { DashboardTable } from '../components/DashboardTable';
 import { FilterSection } from '../components/dashboard/FilterSection';
@@ -164,7 +163,6 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const { orderAllReports, myBalanceReports, skuMasterData, isLoading, updateReportRowStatus, updateBulkStatus } = useData();
   const [showFilters, setShowFilters] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
 
   // -- FILTER STATES --
   const [filters, setFilters] = useState({
@@ -222,8 +220,8 @@ export default function DashboardPage() {
     const profitByDate = new Map<string, number>();
     const adSpendByDate = new Map<string, number>();
 
-    // Process Order All data for profit from the already filtered data
-    filteredData.forEach(row => {
+    // Process Order All data for profit
+    rawData.forEach(row => {
       const dateStr = row['Waktu Pesanan Dibuat']?.split(' ')[0];
       if (dateStr) {
         const profitStr = row['Estimasi Profit'] || '0';
@@ -237,7 +235,9 @@ export default function DashboardPage() {
       const dateStr = row['Tanggal Transaksi']?.split(' ')[0];
       if (dateStr) {
         const spendStr = String(row['Jumlah'] || '0');
+        // Parse the number, which might be negative
         const spend = parseFloat(spendStr.replace(/[^0-9-]/g, '')) || 0;
+        // Add the absolute value to the total ad spend for the day, treating it as a cost
         adSpendByDate.set(dateStr, (adSpendByDate.get(dateStr) || 0) + Math.abs(spend));
       }
     });
@@ -257,28 +257,7 @@ export default function DashboardPage() {
       };
     });
 
-  }, [filteredData, isiUlangSaldoData]);
-
-  const handleExport = () => {
-    setIsExporting(true);
-    setTimeout(() => {
-      try {
-        if (filteredData.length === 0) {
-          console.warn('No data to export.');
-          return;
-        }
-        const fileName = `OrderAll-Export-${new Date().toISOString().split('T')[0]}.xlsx`;
-        const worksheet = XLSX.utils.json_to_sheet(filteredData);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
-        XLSX.writeFile(workbook, fileName);
-      } catch (error) {
-        console.error("Export failed", error);
-      } finally {
-        setIsExporting(false);
-      }
-    }, 500);
-  };
+  }, [rawData, isiUlangSaldoData]);
 
   // Apply Filters
   const filteredData = useMemo(() => {
@@ -443,14 +422,6 @@ export default function DashboardPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <button
-                onClick={handleExport}
-                disabled={isExporting}
-                className="flex items-center gap-2 px-4 py-2.5 bg-brand text-brand-content rounded-xl text-sm font-bold transition-all hover:bg-brand/90 disabled:bg-brand/50 disabled:cursor-not-allowed h-[46px]"
-            >
-                <Download size={16} />
-                <span>{isExporting ? 'Mengekspor...' : 'Export Excel'}</span>
-            </button>
           </div>
         </div>
 
