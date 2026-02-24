@@ -29,40 +29,32 @@ const validateColumns = (data: any[], required: string[]) => {
 const formatDateValue = (dateValue: any): string => {
   if (!dateValue) return '';
 
-  // 1. Handle Excel numeric date format using XLSX library
+  // Fallback for numeric values that might have slipped through (from other file types)
   if (typeof dateValue === 'number') {
     const date = XLSX.SSF.parse_date_code(dateValue);
     if (date) {
       const day = String(date.d).padStart(2, '0');
       const month = String(date.m).padStart(2, '0');
-      const year = date.y;
-      return `${day}/${month}/${year}`;
+      return `${day}/${month}/${date.y}`;
     }
   }
 
-  // 2. Handle string formats (DD/MM/YYYY or D/M/YYYY)
   const dateStr = String(dateValue);
+
+  // Handle formats like 'DD/MM/YYYY' or 'D/M/YYYY'
   const parts = dateStr.split('/');
   if (parts.length === 3) {
     const day = parts[0].padStart(2, '0');
     const month = parts[1].padStart(2, '0');
     const year = parts[2];
-    // Basic validation to ensure it's a plausible date string
-    if (parseInt(day) > 0 && parseInt(month) > 0 && year.length >= 4) {
-       return `${day}/${month}/${year}`;
+
+    // Basic validation
+    if (year.length >= 4 && parseInt(month) > 0 && parseInt(month) <= 12 && parseInt(day) > 0 && parseInt(day) <= 31) {
+      return `${day}/${month}/${year}`;
     }
   }
   
-  // 3. Fallback for other valid date strings that JS can parse
-  const d = new Date(dateStr);
-  if (!isNaN(d.getTime())) {
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
-    return `${day}/${month}/${year}`;
-  }
-
-  // 4. If all else fails, return the original string
+  // If all else fails, return the original string
   return dateStr;
 };
 
@@ -112,7 +104,7 @@ export const processFileBuffer = (
   
   if (!sheetName) return false;
 
-  const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { ...readOpts, raw: true });
+  const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { ...readOpts, raw: false }); // Ensure we get formatted strings
   if (rawData.length === 0) return false;
 
   // --- DETECT EXISTING STATUS ---
