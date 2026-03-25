@@ -264,7 +264,7 @@ export const DashboardTable: React.FC<DashboardTableProps> = ({
     if (!data || data.length === 0) return {};
     const totals: Record<string, number> = {};
     const numericColumns = new Set([
-      'Total Penghasilan', 'Profit', 'Estimasi Profit', 'Revenue Base', 'Admin Shopee 8.25%', 'Gratis Ongkir Xtra 5%', 
+      'Profit', 'Estimasi Profit', 'Revenue Base', 'Admin Shopee 8.25%', 'Gratis Ongkir Xtra 5%', 
       'Promo Xtra 4.5%', 'Biaya Premi 0.5%', 'Biaya Per Transaksi Rp. 1,250', 
       'Biaya Lainnya', 'Total Pembayaran', 'Total Pengembalian Dana', 'Harga', 'Jumlah', 'Total'
     ]);

@@ -57,35 +57,33 @@ const getEnrichedData = (reports: any[], skuMap: Map<string, any>) => {
          idProduk = masterItem.idProduk;
       } 
       
-      // Calculate Total Penghasilan (Sum of Income Data columns)
-      const incomeColumnsToSum = [
-        'Harga Asli Produk', 'Total Diskon Produk', 'Jumlah Pengembalian Dana ke Pembeli', 
-        'Diskon Produk dari Shopee', 'Voucher disponsor oleh Penjual', 'Voucher co-fund disponsor oleh Penjual', 
-        'Cashback Koin disponsori Penjual', 'Cashback Koin Co-fund disponsori Penjual', 'Ongkir Dibayar Pembeli', 
-        'Diskon Ongkir Ditanggung Jasa Kirim', 'Gratis Ongkir dari Shopee', 'Ongkir yang Diteruskan oleh Shopee ke Jasa Kirim', 
-        'Ongkos Kirim Pengembalian Barang', 'Kembali ke Biaya Pengiriman Pengirim', 'Pengembalian Biaya Kirim', 
-        'Biaya Komisi AMS', 'Biaya Administrasi', 'Biaya Layanan', 'Biaya Proses Pesanan', 'Premi', 
-        'Biaya Program Hemat Biaya Kirim', 'Biaya Transaksi', 'Biaya Kampanye', 'Bea Masuk, PPN & PPh', 
-        'Biaya Isi Saldo Otomatis (dari Penghasilan)'
+      const incomeCols = [
+        '[Income] Harga Asli Produk',
+        '[Income] Isi Saldo Otomatis',
+        '[Income] Ongkir Dibayar Pembeli',
+        '[Income] Ongkir Diteruskan',
+        '[Income] Pengembalian Dana',
+        '[Income] Premi',
+        '[Income] Promo Gratis Ongkir Penjual',
+        '[Income] Tanggal Dana Dilepaskan',
+        '[Income] Total Diskon Produk'
       ];
 
-      const parseShopeeNumber = (val: any) => {
-        if (!val) return 0;
-        const str = String(val).replace(/\./g, '').replace(/,/g, '.');
-        const num = parseFloat(str);
-        return isNaN(num) ? 0 : num;
-      };
-
-      let totalPenghasilanVal = 0;
-      let hasIncomeData = false;
-      incomeColumnsToSum.forEach(col => {
-        if (row[col] !== undefined) {
-          totalPenghasilanVal += parseShopeeNumber(row[col]);
-          hasIncomeData = true;
+      let totalPenghasilan = 0;
+      incomeCols.forEach(col => {
+        const val = row[col];
+        if (val !== undefined && val !== null && val !== '') {
+          const strVal = String(val).trim();
+          if ((strVal.includes('-') || strVal.includes('/')) && isNaN(Number(strVal.replace(/[-/]/g, '')))) {
+            return;
+          }
+          const cleanVal = strVal.replace(/\./g, '').replace(/,/g, '.');
+          const num = parseFloat(cleanVal);
+          if (!isNaN(num)) {
+            totalPenghasilan += num;
+          }
         }
       });
-
-      const totalPenghasilanStr = hasIncomeData ? totalPenghasilanVal.toLocaleString('id-ID') : '-';
 
       if (harga) {
         const priceClean = String(harga).replace(/[^0-9]/g, '');
@@ -100,6 +98,7 @@ const getEnrichedData = (reports: any[], skuMap: Map<string, any>) => {
         return {
           ...rest, 
           'Nama Toko': String(namaToko || r.namaToko).toUpperCase(),
+          'Total Penghasilan': totalPenghasilan.toLocaleString('id-ID'),
           'Type Laporan': typeLaporan || jenisLaporan || r.jenisLaporan,
           'Bulan Laporan': bulanLaporan || r.bulanLaporan,
           'Waktu Upload': uploadTime,
@@ -108,7 +107,6 @@ const getEnrichedData = (reports: any[], skuMap: Map<string, any>) => {
           'Harga': harga,
           'Total': total,
           'ID Produk': idProduk,
-          'Total Penghasilan': totalPenghasilanStr,
           '_reportId': r.id,
           '_rowIndex': index,
           '_raw_timestamp': r.timestamp
@@ -118,6 +116,7 @@ const getEnrichedData = (reports: any[], skuMap: Map<string, any>) => {
       return {
         ...rest, 
         'Nama Toko': String(namaToko || r.namaToko).toUpperCase(),
+        'Total Penghasilan': totalPenghasilan.toLocaleString('id-ID'),
         'Type Laporan': typeLaporan || jenisLaporan || r.jenisLaporan,
         'Bulan Laporan': bulanLaporan || r.bulanLaporan,
         'Waktu Upload': uploadTime,
@@ -126,7 +125,6 @@ const getEnrichedData = (reports: any[], skuMap: Map<string, any>) => {
         'Harga': harga,
         'Total': total,
         'ID Produk': idProduk,
-        'Total Penghasilan': totalPenghasilanStr,
         '_reportId': r.id,
         '_rowIndex': index,
         '_raw_timestamp': r.timestamp
