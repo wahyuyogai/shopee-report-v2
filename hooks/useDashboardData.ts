@@ -92,6 +92,36 @@ export const useDashboardData = ({
            idProduk = masterItem.idProduk;
         } 
         
+        // Calculate Total Penghasilan (Sum of Income Data columns)
+        const incomeColumnsToSum = [
+          'Harga Asli Produk', 'Total Diskon Produk', 'Jumlah Pengembalian Dana ke Pembeli', 
+          'Diskon Produk dari Shopee', 'Voucher disponsor oleh Penjual', 'Voucher co-fund disponsor oleh Penjual', 
+          'Cashback Koin disponsori Penjual', 'Cashback Koin Co-fund disponsori Penjual', 'Ongkir Dibayar Pembeli', 
+          'Diskon Ongkir Ditanggung Jasa Kirim', 'Gratis Ongkir dari Shopee', 'Ongkir yang Diteruskan oleh Shopee ke Jasa Kirim', 
+          'Ongkos Kirim Pengembalian Barang', 'Kembali ke Biaya Pengiriman Pengirim', 'Pengembalian Biaya Kirim', 
+          'Biaya Komisi AMS', 'Biaya Administrasi', 'Biaya Layanan', 'Biaya Proses Pesanan', 'Premi', 
+          'Biaya Program Hemat Biaya Kirim', 'Biaya Transaksi', 'Biaya Kampanye', 'Bea Masuk, PPN & PPh', 
+          'Biaya Isi Saldo Otomatis (dari Penghasilan)'
+        ];
+
+        const parseShopeeNumber = (val: any) => {
+          if (!val) return 0;
+          const str = String(val).replace(/\./g, '').replace(/,/g, '.');
+          const num = parseFloat(str);
+          return isNaN(num) ? 0 : num;
+        };
+
+        let totalPenghasilanVal = 0;
+        let hasIncomeData = false;
+        incomeColumnsToSum.forEach(col => {
+          if (row[col] !== undefined) {
+            totalPenghasilanVal += parseShopeeNumber(row[col]);
+            hasIncomeData = true;
+          }
+        });
+
+        const totalPenghasilanStr = hasIncomeData ? totalPenghasilanVal.toLocaleString('id-ID') : '-';
+
         if (harga) {
           const priceClean = String(harga).replace(/[^0-9]/g, '');
           const priceNumeric = parseFloat(priceClean);
@@ -117,6 +147,7 @@ export const useDashboardData = ({
           'Harga': harga,
           'Total': total,
           'ID Produk': idProduk,
+          'Total Penghasilan': totalPenghasilanStr,
           '_reportId': r.id,
           '_rowIndex': index,
           '_raw_timestamp': r.timestamp
