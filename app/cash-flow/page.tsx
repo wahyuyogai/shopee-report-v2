@@ -62,6 +62,9 @@ const getEnrichedData = (reports: any[], skuMap: Map<string, any>) => {
         }
       }
       
+      let profitPcs = 0;
+      let hargaSetelahDiscountPcs = 0;
+
       if (harga) {
         const priceClean = String(harga).replace(/[^0-9]/g, '');
         const priceNumeric = parseFloat(priceClean);
@@ -75,32 +78,13 @@ const getEnrichedData = (reports: any[], skuMap: Map<string, any>) => {
         const hargaSetelahDiskonStr = row['Harga Setelah Diskon'] || row['HARGA SETELAH DISCOUNT'] || '0';
         const hargaSetelahDiskonClean = String(hargaSetelahDiskonStr).replace(/\./g, '').replace(/,/g, '.');
         const hargaSetelahDiskon = parseFloat(hargaSetelahDiskonClean) || 0;
-        const hargaSetelahDiscountPcs = qty > 0 ? hargaSetelahDiskon / qty : 0;
+        hargaSetelahDiscountPcs = qty > 0 ? hargaSetelahDiskon / qty : 0;
 
         // Calculate Profit (PCS)
         const profitStr = row['Profit'] || row['PROFIT'] || '0';
         const profitClean = String(profitStr).replace(/\./g, '').replace(/,/g, '.');
         const profitVal = parseFloat(profitClean) || 0;
-        const profitPcs = qty > 0 ? profitVal / qty : 0;
-
-        return {
-          ...rest, 
-          'No. Pesanan': noPesanan,
-          'Nama Toko': String(namaToko || r.namaToko).toUpperCase(),
-          'Type Laporan': typeLaporan || jenisLaporan || r.jenisLaporan,
-          'Bulan Laporan': bulanLaporan || r.bulanLaporan,
-          'Waktu Upload': uploadTime,
-          'Nama File': r.fileName,
-          'SKU Final': skuFinal,
-          'Harga': harga,
-          'Total': total,
-          'ID Produk': idProduk,
-          'PROFIT (PCS)': profitPcs.toLocaleString('id-ID', { maximumFractionDigits: 0 }),
-          'HARGA SETELAH DISCOUNT (PCS)': hargaSetelahDiscountPcs.toLocaleString('id-ID', { maximumFractionDigits: 0 }),
-          '_reportId': r.id,
-          '_rowIndex': index,
-          '_raw_timestamp': r.timestamp
-        };
+        profitPcs = qty > 0 ? profitVal / qty : 0;
       }
 
       return {
@@ -115,6 +99,8 @@ const getEnrichedData = (reports: any[], skuMap: Map<string, any>) => {
         'Harga': harga,
         'Total': total,
         'ID Produk': idProduk,
+        'PROFIT (PCS)': profitPcs.toLocaleString('id-ID', { maximumFractionDigits: 0 }),
+        'HARGA SETELAH DISCOUNT (PCS)': hargaSetelahDiscountPcs.toLocaleString('id-ID', { maximumFractionDigits: 0 }),
         '_reportId': r.id,
         '_rowIndex': index,
         '_raw_timestamp': r.timestamp

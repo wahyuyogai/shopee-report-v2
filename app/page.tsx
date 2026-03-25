@@ -122,6 +122,8 @@ const getEnrichedData = (reports: any[], skuMap: Map<string, any>, feeToggles: a
       let promoFeeStr = '0';
       let premiFeeStr = '0';
       let txFeeRowStr = '0';
+      let profitPcs = 0;
+      let hargaSetelahDiscountPcs = 0;
 
       if (harga) {
         const priceClean = String(harga).replace(/[^0-9]/g, '');
@@ -140,13 +142,13 @@ const getEnrichedData = (reports: any[], skuMap: Map<string, any>, feeToggles: a
         const hargaSetelahDiskonClean = String(hargaSetelahDiskonStr).replace(/\./g, '').replace(/,/g, '.'); 
         const hargaSetelahDiskon = parseFloat(hargaSetelahDiskonClean) || 0;
 
-        const hargaSetelahDiscountPcs = qty > 0 ? hargaSetelahDiskon / qty : 0;
+        hargaSetelahDiscountPcs = qty > 0 ? hargaSetelahDiskon / qty : 0;
 
         // Calculate Profit (PCS)
         const profitStr = row['Profit'] || row['PROFIT'] || '0';
         const profitClean = String(profitStr).replace(/\./g, '').replace(/,/g, '.');
         const profitVal = parseFloat(profitClean) || 0;
-        const profitPcs = qty > 0 ? profitVal / qty : 0;
+        profitPcs = qty > 0 ? profitVal / qty : 0;
 
         if (!isNaN(hargaSetelahDiskon) && !isNaN(priceNumeric) && !isNaN(qty)) {
             // Calculate Biaya Lainnya

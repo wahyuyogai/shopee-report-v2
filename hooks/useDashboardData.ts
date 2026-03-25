@@ -106,6 +106,11 @@ export const useDashboardData = ({
         const profitVal = parseFloat(profitClean) || 0;
         const profitPcs = qty > 0 ? profitVal / qty : 0;
 
+        const hargaSetelahDiskonStr = row['Harga Setelah Diskon'] || row['HARGA SETELAH DISCOUNT'] || '0';
+        const hargaSetelahDiskonClean = String(hargaSetelahDiskonStr).replace(/\./g, '').replace(/,/g, '.');
+        const hargaSetelahDiskon = parseFloat(hargaSetelahDiskonClean) || 0;
+        const hargaSetelahDiscountPcs = qty > 0 ? hargaSetelahDiskon / qty : 0;
+
         return {
           ...rest, 
           'Nama Toko': namaToko || r.namaToko,
@@ -118,6 +123,7 @@ export const useDashboardData = ({
           'Total': total,
           'ID Produk': idProduk,
           'PROFIT (PCS)': profitPcs.toLocaleString('id-ID', { maximumFractionDigits: 0 }),
+          'HARGA SETELAH DISCOUNT (PCS)': hargaSetelahDiscountPcs.toLocaleString('id-ID', { maximumFractionDigits: 0 }),
           '_reportId': r.id,
           '_rowIndex': index,
           '_raw_timestamp': r.timestamp
