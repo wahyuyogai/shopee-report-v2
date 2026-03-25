@@ -101,15 +101,6 @@ export const useDashboardData = ({
 
         const qtyStr = row['Jumlah'] || row['JUMLAH'] || row['Jumlah Produk Dikembalikan'] || '0';
         const qty = parseFloat(String(qtyStr)) || 0;
-        const profitStr = row['Profit'] || row['PROFIT'] || '0';
-        const profitClean = String(profitStr).replace(/\./g, '').replace(/,/g, '.');
-        const profitVal = parseFloat(profitClean) || 0;
-        const profitPcs = qty > 0 ? profitVal / qty : 0;
-
-        const hargaSetelahDiskonStr = row['Harga Setelah Diskon'] || row['HARGA SETELAH DISCOUNT'] || '0';
-        const hargaSetelahDiskonClean = String(hargaSetelahDiskonStr).replace(/\./g, '').replace(/,/g, '.');
-        const hargaSetelahDiskon = parseFloat(hargaSetelahDiskonClean) || 0;
-        const hargaSetelahDiscountPcs = qty > 0 ? hargaSetelahDiskon / qty : 0;
 
         return {
           ...rest, 
