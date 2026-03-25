@@ -233,7 +233,10 @@ export const DashboardTable: React.FC<DashboardTableProps> = ({
     if (columnSettings[tableId] && columnSettings[tableId].length > 0) {
       const config = columnSettings[tableId];
       const savedKeys = new Set(config.map(c => c.key));
-      const headers = config.filter(c => c.visible).sort((a, b) => a.order - b.order).map(c => c.key);
+      const headers = config
+        .filter(c => c.visible && allHeaders.includes(c.key))
+        .sort((a, b) => a.order - b.order)
+        .map(c => c.key);
       
       // Append any new columns that are not in the saved config
       allHeaders.forEach(col => {
