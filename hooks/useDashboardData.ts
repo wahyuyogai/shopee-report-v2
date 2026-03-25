@@ -106,38 +106,38 @@ export const useDashboardData = ({
         const qtyStr = row['Jumlah'] || row['JUMLAH'] || row['Jumlah Produk Dikembalikan'] || '0';
         const qty = parseFloat(String(qtyStr)) || 0;
 
-        const incomeCols = [
-          '[Income] Harga Asli Produk',
-          '[Income] Isi Saldo Otomatis',
-          '[Income] Ongkir Dibayar Pembeli',
-          '[Income] Ongkir Diteruskan',
-          '[Income] Pengembalian Dana',
-          '[Income] Premi',
-          '[Income] Promo Gratis Ongkir Penjual',
-          '[Income] Tanggal Dana Dilepaskan',
-          '[Income] Total Diskon Produk'
-        ];
+        let calculatedTotalPenghasilan = 0;
+        let rawTotalPenghasilan = 0;
 
-        let totalPenghasilan = 0;
-        incomeCols.forEach(col => {
-          const val = row[col];
-          if (val !== undefined && val !== null && val !== '') {
-            const strVal = String(val).trim();
-            if ((strVal.includes('-') || strVal.includes('/')) && isNaN(Number(strVal.replace(/[-/]/g, '')))) {
-              return;
-            }
-            const cleanVal = strVal.replace(/\./g, '').replace(/,/g, '.');
-            const num = parseFloat(cleanVal);
-            if (!isNaN(num)) {
-              totalPenghasilan += num;
+        Object.keys(row).forEach(key => {
+          if (key.startsWith('[Income]')) {
+            const val = row[key];
+            if (val !== undefined && val !== null && val !== '') {
+              const strVal = String(val).trim();
+              // Skip date strings
+              if (key.includes('Tanggal') && (strVal.includes('-') || strVal.includes('/')) && isNaN(Number(strVal.replace(/[-/]/g, '')))) {
+                return;
+              }
+              const cleanVal = strVal.replace(/\./g, '').replace(/,/g, '.');
+              const num = parseFloat(cleanVal);
+              if (!isNaN(num)) {
+                if (key === '[Income] Total Penghasilan') {
+                  rawTotalPenghasilan = num;
+                } else {
+                  calculatedTotalPenghasilan += num;
+                }
+              }
             }
           }
         });
 
+        const finalTotalPenghasilan = (rawTotalPenghasilan !== 0) ? rawTotalPenghasilan : calculatedTotalPenghasilan;
+
         return {
           ...rest, 
           'Nama Toko': namaToko || r.namaToko,
-          'Total Penghasilan': totalPenghasilan.toLocaleString('id-ID'),
+          'Total Penghasilan': finalTotalPenghasilan.toLocaleString('id-ID'),
+          '[Income] Total Penghasilan': finalTotalPenghasilan.toLocaleString('id-ID'),
           'Type Laporan': typeLaporan || jenisLaporan || r.jenisLaporan,
           'Bulan Laporan': bulanLaporan || r.bulanLaporan,
           'Waktu Upload': uploadTime,

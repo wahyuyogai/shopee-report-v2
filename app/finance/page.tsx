@@ -57,33 +57,41 @@ const getEnrichedData = (reports: any[], skuMap: Map<string, any>) => {
          idProduk = masterItem.idProduk;
       } 
       
-      const incomeCols = [
-        '[Income] Harga Asli Produk',
-        '[Income] Isi Saldo Otomatis',
-        '[Income] Ongkir Dibayar Pembeli',
-        '[Income] Ongkir Diteruskan',
-        '[Income] Pengembalian Dana',
-        '[Income] Premi',
-        '[Income] Promo Gratis Ongkir Penjual',
-        '[Income] Tanggal Dana Dilepaskan',
-        '[Income] Total Diskon Produk'
-      ];
-
+      // Robust Total Penghasilan calculation:
+      // 1. If [Income] Total Penghasilan exists and is non-zero, use it.
+      // 2. Otherwise, sum all columns starting with [Income] (excluding Total Penghasilan itself).
       let totalPenghasilan = 0;
-      incomeCols.forEach(col => {
-        const val = row[col];
-        if (val !== undefined && val !== null && val !== '') {
-          const strVal = String(val).trim();
-          if ((strVal.includes('-') || strVal.includes('/')) && isNaN(Number(strVal.replace(/[-/]/g, '')))) {
-            return;
-          }
-          const cleanVal = strVal.replace(/\./g, '').replace(/,/g, '.');
-          const num = parseFloat(cleanVal);
-          if (!isNaN(num)) {
-            totalPenghasilan += num;
-          }
+      const rawTotalPenghasilan = row['[Income] Total Penghasilan'];
+      let hasDirectTotal = false;
+
+      if (rawTotalPenghasilan !== undefined && rawTotalPenghasilan !== null && rawTotalPenghasilan !== '') {
+        const cleanVal = String(rawTotalPenghasilan).replace(/\./g, '').replace(/,/g, '.');
+        const num = parseFloat(cleanVal);
+        if (!isNaN(num) && num !== 0) {
+          totalPenghasilan = num;
+          hasDirectTotal = true;
         }
-      });
+      }
+
+      if (!hasDirectTotal) {
+        Object.keys(row).forEach(key => {
+          if (key.startsWith('[Income]') && key !== '[Income] Total Penghasilan') {
+            const val = row[key];
+            if (val !== undefined && val !== null && val !== '') {
+              const strVal = String(val).trim();
+              // Skip date-like strings (e.g. [Income] Tanggal Dana Dilepaskan)
+              if ((strVal.includes('-') || strVal.includes('/')) && isNaN(Number(strVal.replace(/[-/]/g, '')))) {
+                return;
+              }
+              const cleanVal = strVal.replace(/\./g, '').replace(/,/g, '.');
+              const num = parseFloat(cleanVal);
+              if (!isNaN(num)) {
+                totalPenghasilan += num;
+              }
+            }
+          }
+        });
+      }
 
       if (harga) {
         const priceClean = String(harga).replace(/[^0-9]/g, '');
@@ -99,6 +107,7 @@ const getEnrichedData = (reports: any[], skuMap: Map<string, any>) => {
           ...rest, 
           'Nama Toko': String(namaToko || r.namaToko).toUpperCase(),
           'Total Penghasilan': totalPenghasilan.toLocaleString('id-ID'),
+          '[Income] Total Penghasilan': totalPenghasilan,
           'Type Laporan': typeLaporan || jenisLaporan || r.jenisLaporan,
           'Bulan Laporan': bulanLaporan || r.bulanLaporan,
           'Waktu Upload': uploadTime,
@@ -117,6 +126,7 @@ const getEnrichedData = (reports: any[], skuMap: Map<string, any>) => {
         ...rest, 
         'Nama Toko': String(namaToko || r.namaToko).toUpperCase(),
         'Total Penghasilan': totalPenghasilan.toLocaleString('id-ID'),
+        '[Income] Total Penghasilan': totalPenghasilan,
         'Type Laporan': typeLaporan || jenisLaporan || r.jenisLaporan,
         'Bulan Laporan': bulanLaporan || r.bulanLaporan,
         'Waktu Upload': uploadTime,
