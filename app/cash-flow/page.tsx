@@ -99,8 +99,6 @@ const getEnrichedData = (reports: any[], skuMap: Map<string, any>) => {
         'Harga': harga,
         'Total': total,
         'ID Produk': idProduk,
-        'PROFIT (PCS)': profitPcs.toLocaleString('id-ID', { maximumFractionDigits: 0 }),
-        'HARGA SETELAH DISCOUNT (PCS)': hargaSetelahDiscountPcs.toLocaleString('id-ID', { maximumFractionDigits: 0 }),
         '_reportId': r.id,
         '_rowIndex': index,
         '_raw_timestamp': r.timestamp
