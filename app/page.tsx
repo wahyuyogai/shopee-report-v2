@@ -228,8 +228,6 @@ const getEnrichedData = (reports: any[], skuMap: Map<string, any>, feeToggles: a
         'Biaya Premi 0.5%': premiFeeStr,
         'Biaya Per Transaksi Rp. 1,250': txFeeRowStr,
         'Biaya Lainnya': biayaLainnyaStr,
-        'PROFIT (PCS)': profitPcs.toLocaleString('id-ID', { maximumFractionDigits: 0 }),
-        'HARGA SETELAH DISCOUNT (PCS)': hargaSetelahDiscountPcs.toLocaleString('id-ID', { maximumFractionDigits: 0 }),
         'Type Laporan': typeLaporan || jenisLaporan || r.jenisLaporan,
         'Bulan Laporan': bulanLaporan || r.bulanLaporan,
         'Waktu Upload': uploadTime,
