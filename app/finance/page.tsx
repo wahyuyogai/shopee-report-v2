@@ -24,6 +24,10 @@ const getEnrichedData = (reports: any[], skuMap: Map<string, any>) => {
         'Jenis Laporan': jenisLaporan,
         'Type Laporan': typeLaporan,
         'Bulan Laporan': bulanLaporan, 
+        'HARGA SETELAH DISCOUNT (PCS)': _hsdp,
+        'PROFIT (PCS)': _pp,
+        'Harga Setelah Discount (Pcs)': _hsdp2,
+        'Profit (Pcs)': _pp2,
         ...rest 
       } = row;
 
