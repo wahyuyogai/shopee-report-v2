@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import { LayoutDashboard, Upload, X, Package, Settings, ClipboardList, Tags, TrendingUp, RotateCcw } from 'lucide-react';
+import { LayoutDashboard, Upload, X, Package, Settings, ClipboardList, Tags, TrendingUp, RotateCcw, Banknote } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useData } from './DataProvider';
@@ -29,6 +29,12 @@ export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
       path: '/finance', 
       label: 'Finance', 
       icon: <TrendingUp size={20} />,
+      roles: ['super_admin', 'guest']
+    },
+    { 
+      path: '/cash-flow', 
+      label: 'Cash Flow', 
+      icon: <Banknote size={20} />,
       roles: ['super_admin', 'guest']
     },
     { 

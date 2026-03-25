@@ -12,6 +12,7 @@ interface FilterSelectProps {
   placeholder?: string;
   multiple?: boolean;
   counts?: Record<string, number>; // New prop for badge counts
+  customLabels?: Record<string, string>; // New prop for custom display labels
 }
 
 export const FilterSelect: React.FC<FilterSelectProps> = ({
@@ -21,7 +22,8 @@ export const FilterSelect: React.FC<FilterSelectProps> = ({
   options,
   placeholder = "Semua",
   multiple = false,
-  counts
+  counts,
+  customLabels
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -61,10 +63,16 @@ export const FilterSelect: React.FC<FilterSelectProps> = ({
     const arr = Array.isArray(value) ? value : [];
     if (arr.length > 0) {
       displayText = `${arr.length} Terpilih`;
-      if (arr.length === 1) displayText = arr[0];
+      if (arr.length === 1) {
+        const val = arr[0];
+        displayText = customLabels && customLabels[val] ? customLabels[val] : val;
+      }
     }
   } else {
-    if (value) displayText = value as string;
+    if (value) {
+      const val = value as string;
+      displayText = customLabels && customLabels[val] ? customLabels[val] : val;
+    }
   }
 
   const hasValue = multiple ? (value as string[]).length > 0 : !!value;
@@ -133,7 +141,9 @@ export const FilterSelect: React.FC<FilterSelectProps> = ({
                     ${isSelected ? 'bg-brand/5 text-brand font-bold' : 'text-text-main hover:bg-app'}
                   `}
                 >
-                  <span className="flex-1">{opt}</span>
+                  <span className="flex-1">
+                    {customLabels && customLabels[opt] ? customLabels[opt] : opt}
+                  </span>
                   
                   <div className="flex items-center gap-2">
                     {/* Count Badge */}

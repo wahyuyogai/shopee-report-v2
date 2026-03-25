@@ -270,7 +270,7 @@ export default function UploadPage() {
           <div className="bg-surface rounded-2xl shadow-xl border border-border p-8 transition-all hover:shadow-2xl">
             <label 
               className={`
-                relative flex flex-col items-center justify-center w-full h-80 border-2 border-dashed rounded-2xl transition-all cursor-pointer
+                relative flex flex-col items-center justify-center w-full min-h-[24rem] py-8 border-2 border-dashed rounded-2xl transition-all cursor-pointer
                 ${isProcessing ? 'bg-app/50 border-brand/30 cursor-wait' : 'bg-app/20 border-border hover:border-brand hover:bg-brand-muted'}
               `}
             >
@@ -284,7 +284,7 @@ export default function UploadPage() {
                 disabled={isProcessing}
               />
               
-              <div className="flex flex-col items-center justify-center text-center space-y-4">
+              <div className="flex flex-col items-center justify-center text-center space-y-6">
                 {isProcessing ? (
                   <>
                     <Loader2 size={48} className="text-brand animate-spin" />
@@ -295,14 +295,14 @@ export default function UploadPage() {
                   </>
                 ) : (
                   <>
-                    <div className="h-20 w-20 bg-brand-muted rounded-full flex items-center justify-center text-brand mb-2">
+                    <div className="h-20 w-20 bg-brand-muted rounded-full flex items-center justify-center text-brand mb-2 shrink-0">
                       <FileArchive size={36} />
                     </div>
-                    <div className="space-y-2 px-4">
+                    <div className="space-y-4 px-4">
                       <p className="text-xl font-bold text-text-main">
                         Upload File Laporan
                       </p>
-                      <div className="text-xs text-text-muted space-y-1 max-w-xs mx-auto text-left">
+                      <div className="text-xs text-text-muted space-y-1.5 max-w-xs mx-auto text-left">
                          <p className="flex items-center gap-2">
                             <span className="w-20 font-bold text-brand text-right">Return File:</span> 
                             <span className="font-mono bg-app px-1 rounded">NAMA_TOKO - ...xlsx</span>
@@ -323,12 +323,12 @@ export default function UploadPage() {
                             <span className="w-20 font-bold text-brand text-right">Adwords:</span> 
                             <span className="font-mono bg-app px-1 rounded">adwords_bill...csv</span>
                          </p>
-                         <p className="text-[10px] text-emerald-600 italic mt-1 pt-1 border-t border-border/50 text-center font-medium">
+                         <p className="text-[10px] text-emerald-600 italic mt-3 pt-2 border-t border-border/50 text-center font-medium">
                             *Mendukung re-upload file hasil export dashboard.
                          </p>
                       </div>
                     </div>
-                    <div className="px-6 py-2.5 bg-brand text-brand-content rounded-full font-bold shadow-lg hover:scale-105 active:scale-95 transition-all">
+                    <div className="px-6 py-2.5 bg-brand text-brand-content rounded-full font-bold shadow-lg hover:scale-105 active:scale-95 transition-all mt-4">
                       Pilih File(s) (.zip / .xlsx / .xls / .csv)
                     </div>
                   </>
@@ -503,13 +503,13 @@ export default function UploadPage() {
                 <PreviewTable 
                   data={previewData.cancelled.newRows} 
                   type="new" 
-                  category="failed" 
+                  category="cancelled" 
                   onExport={handleExport} 
                 />
                 <PreviewTable 
                   data={previewData.cancelled.duplicateRows} 
                   type="duplicate" 
-                  category="failed"
+                  category="cancelled"
                   onExport={handleExport} 
                 />
               </div>
@@ -525,13 +525,13 @@ export default function UploadPage() {
                 <PreviewTable 
                   data={previewData.orderAll.newRows} 
                   type="new" 
-                  category="failed" 
+                  category="orderAll" 
                   onExport={handleExport} 
                 />
                 <PreviewTable 
                   data={previewData.orderAll.duplicateRows} 
                   type="duplicate" 
-                  category="failed"
+                  category="orderAll"
                   onExport={handleExport} 
                 />
               </div>
@@ -547,13 +547,13 @@ export default function UploadPage() {
                 <PreviewTable 
                   data={previewData.income.newRows} 
                   type="new" 
-                  category="failed" 
+                  category="income" 
                   onExport={handleExport} 
                 />
                 <PreviewTable 
                   data={previewData.income.duplicateRows} 
                   type="duplicate" 
-                  category="failed"
+                  category="income"
                   onExport={handleExport} 
                 />
               </div>
@@ -569,13 +569,13 @@ export default function UploadPage() {
                 <PreviewTable 
                   data={previewData.myBalance.newRows} 
                   type="new" 
-                  category="failed" 
+                  category="myBalance" 
                   onExport={handleExport} 
                 />
                 <PreviewTable 
                   data={previewData.myBalance.duplicateRows} 
                   type="duplicate" 
-                  category="failed"
+                  category="myBalance"
                   onExport={handleExport} 
                 />
               </div>
@@ -591,13 +591,13 @@ export default function UploadPage() {
                 <PreviewTable 
                   data={previewData.adwordsBill.newRows} 
                   type="new" 
-                  category="failed" 
+                  category="adwordsBill" 
                   onExport={handleExport} 
                 />
                 <PreviewTable 
                   data={previewData.adwordsBill.duplicateRows} 
                   type="duplicate" 
-                  category="failed"
+                  category="adwordsBill"
                   onExport={handleExport} 
                 />
               </div>

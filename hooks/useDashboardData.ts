@@ -99,6 +99,13 @@ export const useDashboardData = ({
           }
         }
 
+        const qtyStr = row['Jumlah'] || row['JUMLAH'] || row['Jumlah Produk Dikembalikan'] || '0';
+        const qty = parseFloat(String(qtyStr)) || 0;
+        const profitStr = row['Profit'] || row['PROFIT'] || '0';
+        const profitClean = String(profitStr).replace(/\./g, '').replace(/,/g, '.');
+        const profitVal = parseFloat(profitClean) || 0;
+        const profitPcs = qty > 0 ? profitVal / qty : 0;
+
         return {
           ...rest, 
           'Nama Toko': namaToko || r.namaToko,
@@ -110,6 +117,7 @@ export const useDashboardData = ({
           'Harga': harga,
           'Total': total,
           'ID Produk': idProduk,
+          'PROFIT (PCS)': profitPcs.toLocaleString('id-ID', { maximumFractionDigits: 0 }),
           '_reportId': r.id,
           '_rowIndex': index,
           '_raw_timestamp': r.timestamp
@@ -199,6 +207,25 @@ export const useDashboardData = ({
 
     const str = String(val).trim();
     if (str === '-' || str === '') return null;
+
+    // Try DD/MM/YYYY or D/M/YYYY first to prevent new Date() from parsing it as MM/DD/YYYY
+    const ddMmYyyyMatch = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (ddMmYyyyMatch) {
+      const day = ddMmYyyyMatch[1].padStart(2, '0');
+      const month = ddMmYyyyMatch[2].padStart(2, '0');
+      const year = ddMmYyyyMatch[3];
+      const d = new Date(`${year}-${month}-${day}T00:00:00`);
+      if (!isNaN(d.getTime())) return d.getTime();
+    }
+
+    const ddMmYyyyDashMatch = str.match(/^(\d{1,2})-(\d{1,2})-(\d{4})/);
+    if (ddMmYyyyDashMatch) {
+      const day = ddMmYyyyDashMatch[1].padStart(2, '0');
+      const month = ddMmYyyyDashMatch[2].padStart(2, '0');
+      const year = ddMmYyyyDashMatch[3];
+      const d = new Date(`${year}-${month}-${day}T00:00:00`);
+      if (!isNaN(d.getTime())) return d.getTime();
+    }
 
     let d = new Date(str);
     if (!isNaN(d.getTime())) return d.getTime();

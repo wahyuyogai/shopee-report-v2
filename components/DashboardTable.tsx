@@ -41,7 +41,7 @@ export const DashboardTable: React.FC<DashboardTableProps> = ({
   
   // -- PAGINATION STATE --
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50); // Default 50 baris per halaman agar ringan
+  const [pageSize, setPageSize] = useState(5); // Default 5 baris per halaman
 
   const { columnSettings, saveColumnConfig, resetColumnConfig, deleteRows } = useData();
   const { confirm, showToast } = useUI();
@@ -209,6 +209,7 @@ export const DashboardTable: React.FC<DashboardTableProps> = ({
 
   // --- COLUMN LOGIC ---
   const allHeaders = useMemo(() => {
+    if (!data || data.length === 0) return [];
     const headersSet = new Set<string>();
     // Scan up to 500 items for headers to be safe, scanning all 5000 is fast in JS
     data.slice(0, 500).forEach(row => {
@@ -220,7 +221,7 @@ export const DashboardTable: React.FC<DashboardTableProps> = ({
   }, [data]);
 
   const priorityHeaders = [
-    'No', 'Claim Status', 'Nama Toko', 'Estimasi Profit', 
+    'No', 'Claim Status', 'Tanggal Transaksi', 'Waktu', 'Nama Toko', 'Profit', 'PROFIT (PCS)', 'HARGA SETELAH DISCOUNT (PCS)', 'Estimasi Profit', 
     'Revenue Base', 'Admin Shopee 8.25%', 'Gratis Ongkir Xtra 5%', 'Promo Xtra 4.5%', 'Biaya Premi 0.5%', 'Biaya Per Transaksi Rp. 1,250',
     'Biaya Lainnya', 'Type Laporan', 'No. Pesanan', 'No. Resi', 
     'No. Resi Pengembalian Barang', 'Waktu Pesanan Dibuat', 'Status Pesanan', 'Status pengiriman gagal', 
@@ -231,7 +232,16 @@ export const DashboardTable: React.FC<DashboardTableProps> = ({
   const displayHeaders = useMemo(() => {
     if (columnSettings[tableId] && columnSettings[tableId].length > 0) {
       const config = columnSettings[tableId];
-      return config.filter(c => c.visible).sort((a, b) => a.order - b.order).map(c => c.key);
+      const savedKeys = new Set(config.map(c => c.key));
+      const headers = config.filter(c => c.visible).sort((a, b) => a.order - b.order).map(c => c.key);
+      
+      // Append any new columns that are not in the saved config
+      allHeaders.forEach(col => {
+        if (!savedKeys.has(col)) {
+          headers.push(col);
+        }
+      });
+      return headers;
     }
     const headers = [...allHeaders].sort((a, b) => {
       const idxA = priorityHeaders.indexOf(a);
@@ -245,6 +255,69 @@ export const DashboardTable: React.FC<DashboardTableProps> = ({
     if (!headers.includes('Claim Status')) headers.splice(1, 0, 'Claim Status');
     return headers;
   }, [allHeaders, columnSettings, tableId]);
+
+  // --- SUBTOTAL LOGIC ---
+  const subtotals = useMemo(() => {
+    if (!data || data.length === 0) return {};
+    const totals: Record<string, number> = {};
+    const numericColumns = new Set([
+      'Profit', 'PROFIT (PCS)', 'HARGA SETELAH DISCOUNT (PCS)', 'Estimasi Profit', 'Revenue Base', 'Admin Shopee 8.25%', 'Gratis Ongkir Xtra 5%', 
+      'Promo Xtra 4.5%', 'Biaya Premi 0.5%', 'Biaya Per Transaksi Rp. 1,250', 
+      'Biaya Lainnya', 'Total Pembayaran', 'Total Pengembalian Dana', 'Harga', 'Jumlah', 'Total'
+    ]);
+
+    displayHeaders.forEach(h => {
+      if (h === 'No' || h === 'Claim Status') return;
+      
+      const hLower = h.toLowerCase();
+      // If column name contains certain keywords, it's likely numeric
+      const isLikelyNumeric = numericColumns.has(h) || 
+                             hLower.includes('biaya') || 
+                             hLower.includes('profit') || 
+                             hLower.includes('revenue') || 
+                             hLower.includes('total') || 
+                             hLower.includes('jumlah') || 
+                             hLower.includes('harga');
+      
+      if (!isLikelyNumeric) return;
+
+      // Exclude IDs and non-sumable number-like strings
+      if (hLower.includes('no.') || hLower.includes('id') || hLower.includes('resi') || hLower.includes('telepon') || hLower.includes('rekening')) {
+        // Exception for columns that are actually numeric despite having "No" or "ID"
+        if (!hLower.includes('jumlah') && !hLower.includes('total') && !hLower.includes('harga') && !hLower.includes('profit')) {
+          return;
+        }
+      }
+
+      let sum = 0;
+      let hasValue = false;
+      
+      data.forEach(row => {
+        const val = row[h];
+        if (val === undefined || val === null || val === '-' || val === '') return;
+        
+        let num = 0;
+        if (typeof val === 'number') {
+          num = val;
+          hasValue = true;
+        } else {
+          // Clean string: remove dots (thousands), replace comma with dot (decimal)
+          const cleanVal = String(val).replace(/\./g, '').replace(/,/g, '.').replace(/[^0-9.-]/g, '');
+          const parsed = parseFloat(cleanVal);
+          if (!isNaN(parsed)) {
+            num = parsed;
+            hasValue = true;
+          }
+        }
+        sum += num;
+      });
+      
+      if (hasValue) {
+        totals[h] = sum;
+      }
+    });
+    return totals;
+  }, [data, displayHeaders]);
 
 
   if (isLoading) {
@@ -302,6 +375,8 @@ export const DashboardTable: React.FC<DashboardTableProps> = ({
                  onChange={handlePageSizeChange}
                  className="bg-surface border border-border rounded-lg text-xs font-bold px-2 py-1 outline-none focus:border-brand"
                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
                   <option value={20}>20</option>
                   <option value={50}>50</option>
                   <option value={100}>100</option>
@@ -330,7 +405,7 @@ export const DashboardTable: React.FC<DashboardTableProps> = ({
         </div>
 
         {/* Table Container */}
-        <div className={`relative w-full overflow-auto border border-border rounded-xl bg-surface shadow-sm ${tableId === 'estimasi-profit' || tableId === 'isi-ulang-saldo' ? 'max-h-72' : ''}`}>
+        <div className={`relative w-full overflow-auto border border-border rounded-xl bg-surface shadow-sm ${['estimasi-profit', 'isi-ulang-saldo', 'my-balance', 'order-all', 'income', 'adwords-bill'].includes(tableId) ? 'max-h-[600px]' : ''}`}>
           <table className="w-full text-left text-xs border-collapse">
             <thead className="bg-surface text-text-muted font-bold uppercase tracking-wider sticky top-0 z-10 shadow-sm">
               <tr>
@@ -505,6 +580,33 @@ export const DashboardTable: React.FC<DashboardTableProps> = ({
                 );
               })}
             </tbody>
+
+            {/* STICKY SUBTOTAL FOOTER */}
+            <tfoot className="bg-surface text-text-main font-black border-t-2 border-border sticky bottom-0 z-10 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+              <tr>
+                {(!isGuest && !isExporting) && <td className="px-4 py-3 bg-surface border-t border-border"></td>}
+                {displayHeaders.map(h => {
+                  if (h === 'No') {
+                    return (
+                      <td key={h} className="px-4 py-3 text-center bg-surface border-t border-border">
+                        TOTAL
+                      </td>
+                    );
+                  }
+                  
+                  const total = subtotals[h];
+                  const isNumeric = total !== undefined;
+                  
+                  return (
+                    <td key={h} className={`px-4 py-3 whitespace-nowrap bg-surface border-t border-border ${isNumeric ? 'text-brand' : ''}`}>
+                      {isNumeric ? (
+                        h === 'Jumlah' ? total.toLocaleString('id-ID') : total.toLocaleString('id-ID', { maximumFractionDigits: 0 })
+                      ) : ''}
+                    </td>
+                  );
+                })}
+              </tr>
+            </tfoot>
           </table>
         </div>
 

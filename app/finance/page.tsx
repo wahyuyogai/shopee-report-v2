@@ -56,17 +56,40 @@ const getEnrichedData = (reports: any[], skuMap: Map<string, any>) => {
       if (harga) {
         const priceClean = String(harga).replace(/[^0-9]/g, '');
         const priceNumeric = parseFloat(priceClean);
-        const qtyStr = row['Jumlah'] || '0';
+        const qtyStr = row['Jumlah'] || row['JUMLAH'] || '0';
         const qty = parseFloat(String(qtyStr));
 
         if (!isNaN(priceNumeric) && !isNaN(qty) && qty > 0) {
            total = (priceNumeric * qty).toLocaleString('id-ID');
         }
+
+        // Calculate Profit (PCS)
+        const profitStr = row['Profit'] || row['PROFIT'] || '0';
+        const profitClean = String(profitStr).replace(/\./g, '').replace(/,/g, '.');
+        const profitVal = parseFloat(profitClean) || 0;
+        const profitPcs = qty > 0 ? profitVal / qty : 0;
+
+        return {
+          ...rest, 
+          'Nama Toko': String(namaToko || r.namaToko).toUpperCase(),
+          'Type Laporan': typeLaporan || jenisLaporan || r.jenisLaporan,
+          'Bulan Laporan': bulanLaporan || r.bulanLaporan,
+          'Waktu Upload': uploadTime,
+          'Nama File': r.fileName,
+          'SKU Final': skuFinal,
+          'Harga': harga,
+          'Total': total,
+          'ID Produk': idProduk,
+          'PROFIT (PCS)': profitPcs.toLocaleString('id-ID', { maximumFractionDigits: 0 }),
+          '_reportId': r.id,
+          '_rowIndex': index,
+          '_raw_timestamp': r.timestamp
+        };
       }
 
       return {
         ...rest, 
-        'Nama Toko': namaToko || r.namaToko,
+        'Nama Toko': String(namaToko || r.namaToko).toUpperCase(),
         'Type Laporan': typeLaporan || jenisLaporan || r.jenisLaporan,
         'Bulan Laporan': bulanLaporan || r.bulanLaporan,
         'Waktu Upload': uploadTime,
@@ -92,10 +115,11 @@ export default function FinancePage() {
   // -- FILTER STATES --
   const [filters, setFilters] = useState({
     status: [] as string[], 
-    toko: '',
+    toko: [] as string[],
     type: '',
     bulan: [] as string[],
-    orderStatus: [] as string[]
+    orderStatus: [] as string[],
+    showCancelled: false
   });
 
   // -- DATE FILTER STATE --
@@ -143,11 +167,19 @@ export default function FinancePage() {
     let data = rawData;
 
     // Standard Filters
-    if (filters.toko) data = data.filter(item => item['Nama Toko'] === filters.toko);
+    if (filters.toko && filters.toko.length > 0) data = data.filter(item => filters.toko.includes(item['Nama Toko']));
     if (filters.bulan && filters.bulan.length > 0) data = data.filter(item => filters.bulan.includes(item['Bulan Laporan']));
     
     // Status Filter
     if (filters.status && filters.status.length > 0) data = data.filter(item => filters.status.includes(item['Claim Status']));
+
+    // Show Cancelled Filter
+    if (!filters.showCancelled) {
+      data = data.filter(item => {
+        const status = String(item['Status Pesanan'] || '').toLowerCase();
+        return !status.includes('batal') && !status.includes('pengembalian');
+      });
+    }
 
     // Date Filter
     if (dateFilter.column && (dateFilter.start || dateFilter.end)) {
@@ -160,24 +192,32 @@ export default function FinancePage() {
         
         if (!valToCheck) return false;
         
-        let d = new Date(valToCheck);
-        // Handle numeric timestamp
-        if (typeof valToCheck === 'number') d = new Date(valToCheck);
-        
-        if (isNaN(d.getTime())) {
-           const dateStr = String(valToCheck);
-           const parts = dateStr.split('/');
-           if (parts.length === 3) {
-               // Handle D/M/YYYY and DD/MM/YYYY
-               const day = parts[0].padStart(2, '0');
-               const month = parts[1].padStart(2, '0');
-               const year = parts[2];
-               d = new Date(`${year}-${month}-${day}`);
-           } else {
-              // Try parsing simple string date
-              const parts = dateStr.split(/[-/]/);
-              if (parts.length >= 3) d = new Date(`${parts[0]}-${parts[1]}-${parts[2]}`);
-           }
+        let d = new Date(NaN);
+        if (typeof valToCheck === 'number') {
+          d = new Date(valToCheck);
+        } else {
+          const dateStr = String(valToCheck).trim();
+          
+          // Try DD/MM/YYYY or D/M/YYYY
+          const ddMmYyyyMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+          if (ddMmYyyyMatch) {
+            const day = ddMmYyyyMatch[1].padStart(2, '0');
+            const month = ddMmYyyyMatch[2].padStart(2, '0');
+            const year = ddMmYyyyMatch[3];
+            d = new Date(`${year}-${month}-${day}T00:00:00`);
+          } else {
+            // Try DD-MM-YYYY
+            const ddMmYyyyDashMatch = dateStr.match(/^(\d{1,2})-(\d{1,2})-(\d{4})/);
+            if (ddMmYyyyDashMatch) {
+              const day = ddMmYyyyDashMatch[1].padStart(2, '0');
+              const month = ddMmYyyyDashMatch[2].padStart(2, '0');
+              const year = ddMmYyyyDashMatch[3];
+              d = new Date(`${year}-${month}-${day}T00:00:00`);
+            } else {
+              // Fallback to standard parsing
+              d = new Date(dateStr);
+            }
+          }
         }
 
         if (isNaN(d.getTime())) return false;

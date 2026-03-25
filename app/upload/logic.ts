@@ -146,13 +146,18 @@ export const processFileBuffer = (
     } else if (isFilenameAdwordsBill) {
       const match = fileName.match(/(.*?)_adwords_bill/i);
       if (match && match[1]) {
-        namaToko = match[1].toUpperCase();
+        namaToko = match[1];
       } else {
         namaToko = 'Unknown';
       }
     } else {
       namaToko = 'Unknown';
     }
+  }
+
+  // Ensure namaToko is always uppercase
+  if (namaToko) {
+    namaToko = namaToko.toUpperCase();
   }
 
   if (!bulan || bulan === 'Unknown') {
@@ -164,7 +169,7 @@ export const processFileBuffer = (
   }
 
   // Row Iteration
-  rawData.forEach((row: any) => {
+  rawData.forEach((row: any, index: number) => {
     let rowType: 'failed' | 'return' | 'cancelled' | 'order-all' | 'income' | 'my-balance' | 'adwords-bill' | null = null;
 
     if (isExportFile) {
@@ -192,8 +197,39 @@ export const processFileBuffer = (
     }
 
     if (rowType) {
-      const specificNamaToko = isExportFile && row['Nama Toko'] ? row['Nama Toko'] : namaToko;
-      const specificBulan = isExportFile && row['Bulan Laporan'] ? row['Bulan Laporan'] : bulan;
+      let specificNamaToko = isExportFile && row['Nama Toko'] ? row['Nama Toko'] : namaToko;
+      if (specificNamaToko) {
+        specificNamaToko = String(specificNamaToko).toUpperCase();
+      }
+      let specificBulan = isExportFile && row['Bulan Laporan'] ? row['Bulan Laporan'] : bulan;
+
+      // Special logic for Adwords Bill: Extract month from "Waktu" column if not an export file
+      if (rowType === 'adwords-bill' && !isExportFile && row['Waktu']) {
+        const waktuStr = String(row['Waktu']).trim();
+        const parts = waktuStr.split('/');
+        if (parts.length === 3) {
+          const mCode = parts[1].padStart(2, '0');
+          const monthName = monthMap[mCode];
+          if (monthName) {
+            specificBulan = monthName;
+          }
+        }
+      }
+
+      // Special logic for MyBalance: Extract month from "Tanggal Transaksi"
+      if (rowType === 'my-balance' && !isExportFile && row['Tanggal Transaksi']) {
+        const dateStr = String(row['Tanggal Transaksi']).trim();
+        // Format: 2026-01-31 22:38:40
+        const match = dateStr.match(/^\d{4}-(\d{2})-\d{2}/);
+        if (match) {
+          const mCode = match[1];
+          const monthName = monthMap[mCode];
+          if (monthName) {
+            specificBulan = monthName;
+          }
+        }
+      }
+
       const rawStatus = row['Claim Status'];
       
       let reportTypeLabel = '';
@@ -212,6 +248,7 @@ export const processFileBuffer = (
         'Type Laporan': reportTypeLabel,
         'Bulan Laporan': specificBulan,
         'Nama File': fileName,
+        '_rowIndex': index,
         'SKU Final': row['SKU Final'] || '',
         'Harga': row['Harga'] || '',
         'Total': row['Total'] || ''
@@ -222,10 +259,10 @@ export const processFileBuffer = (
       else if (rowType === 'cancelled') cancelledRowsBatch.push(enrichedRow);
       else if (rowType === 'income') incomeRowsBatch.push(enrichedRow);
       else if (rowType === 'my-balance') myBalanceRowsBatch.push(enrichedRow);
-      if (rowType === 'adwords-bill') {
+      else if (rowType === 'adwords-bill') {
         enrichedRow['Waktu'] = formatDateValue(enrichedRow['Waktu']);
         adwordsBillRowsBatch.push(enrichedRow);
-      } else {
+      } else if (rowType === 'order-all') {
         orderAllRowsBatch.push(enrichedRow);
       }
     }

@@ -4,7 +4,7 @@ export const FAILED_DELIVERY_COLUMNS = [
   "Opsi Pengiriman", "Antar ke counter/ pick-up", "Pesanan Harus Dikirimkan Sebelum (Menghindari keterlambatan)", 
   "Waktu Pengiriman Diatur", "Waktu Pesanan Dibuat", "Waktu Pembayaran Dilakukan", "Metode Pembayaran", 
   "SKU Induk", "Nama Produk", "Nomor Referensi SKU", "Nama Variasi", "Harga Awal", "Harga Setelah Diskon", 
-  "Jumlah", "Returned quantity", "Total Harga Produk", "Total Diskon", "Diskon Dari Penjual", "Diskon Dari Shopee", 
+  "Jumlah", "Returned quantity", "Dibayar Pembeli", "Total Diskon", "Diskon Dari Penjual", "Diskon Dari Shopee", 
   "Berat Produk", "Jumlah Produk di Pesan", "Total Berat", "Voucher Ditanggung Penjual", "Cashback Koin", 
   "Voucher Ditanggung Shopee", "Paket Diskon", "Paket Diskon (Diskon dari Shopee)", "Paket Diskon (Diskon dari Penjual)", 
   "Potongan Koin Shopee", "Diskon Kartu Kredit", "Ongkos Kirim Dibayar oleh Pembeli", "Estimasi Potongan Biaya Pengiriman", 
@@ -34,7 +34,7 @@ export const CANCELLED_COLUMNS = [
   "Opsi Pengiriman", "Antar ke counter/ pick-up", "Pesanan Harus Dikirimkan Sebelum (Menghindari keterlambatan)", 
   "Waktu Pengiriman Diatur", "Waktu Pesanan Dibuat", "Waktu Pembayaran Dilakukan", "Metode Pembayaran", 
   "SKU Induk", "Nama Produk", "Nomor Referensi SKU", "Nama Variasi", "Harga Awal", "Harga Setelah Diskon", 
-  "Jumlah", "Returned quantity", "Total Harga Produk", "Total Diskon", "Diskon Dari Penjual", "Diskon Dari Shopee", 
+  "Jumlah", "Returned quantity", "Dibayar Pembeli", "Total Diskon", "Diskon Dari Penjual", "Diskon Dari Shopee", 
   "Berat Produk", "Jumlah Produk di Pesan", "Total Berat", "Voucher Ditanggung Penjual", "Cashback Koin", 
   "Voucher Ditanggung Shopee", "Paket Diskon", "Paket Diskon (Diskon dari Shopee)", "Paket Diskon (Diskon dari Penjual)", 
   "Potongan Koin Shopee", "Diskon Kartu Kredit", "Ongkos Kirim Dibayar oleh Pembeli", "Estimasi Potongan Biaya Pengiriman", 
@@ -48,7 +48,7 @@ export const ORDER_ALL_COLUMNS = [
   "Opsi Pengiriman", "Antar ke counter/ pick-up", "Pesanan Harus Dikirimkan Sebelum (Menghindari keterlambatan)", 
   "Waktu Pengiriman Diatur", "Waktu Pesanan Dibuat", "Waktu Pembayaran Dilakukan", "Metode Pembayaran", 
   "SKU Induk", "Nama Produk", "Nomor Referensi SKU", "Nama Variasi", "Harga Awal", "Harga Setelah Diskon", 
-  "Jumlah", "Returned quantity", "Total Harga Produk", "Total Diskon", "Diskon Dari Penjual", "Diskon Dari Shopee", 
+  "Jumlah", "Returned quantity", "Dibayar Pembeli", "Total Diskon", "Diskon Dari Penjual", "Diskon Dari Shopee", 
   "Berat Produk", "Jumlah Produk di Pesan", "Total Berat", "Voucher Ditanggung Penjual", "Cashback Koin", 
   "Voucher Ditanggung Shopee", "Paket Diskon", "Paket Diskon (Diskon dari Shopee)", "Paket Diskon (Diskon dari Penjual)", 
   "Potongan Koin Shopee", "Diskon Kartu Kredit", "Ongkos Kirim Dibayar oleh Pembeli", "Estimasi Potongan Biaya Pengiriman", 
@@ -133,7 +133,8 @@ export const generateUniqueKey = (row: any, type: 'failed' | 'return' | 'cancell
     ].join('|');
   } else if (type === 'adwords-bill') {
     return [
-      normalize(row['Urutan']),
+      normalize(row['Nama File']),
+      normalize(row['_rowIndex']),
       normalize(row['Waktu']),
       normalize(row['Deskripsi']),
       normalize(row['Jumlah'])

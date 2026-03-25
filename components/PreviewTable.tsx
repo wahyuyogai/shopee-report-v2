@@ -8,7 +8,7 @@ import * as XLSX from 'xlsx';
 interface PreviewTableProps {
   data: any[];
   type: 'new' | 'duplicate';
-  category: 'failed' | 'returned';
+  category: 'failed' | 'returned' | 'cancelled' | 'orderAll' | 'income' | 'myBalance' | 'adwordsBill';
   onExport: (data: any[], prefix: string) => void;
 }
 
@@ -20,7 +20,18 @@ export const PreviewTable: React.FC<PreviewTableProps> = ({ data, type, category
   // Get headers from first row, prioritized
   const firstRow = data[0];
   const headers = Object.keys(firstRow);
-  const categoryLabel = category === 'failed' ? 'Pengiriman Gagal' : 'Pengembalian';
+  
+  const categoryLabels: Record<string, string> = {
+    'failed': 'Pengiriman Gagal',
+    'returned': 'Pengembalian',
+    'cancelled': 'Pembatalan',
+    'orderAll': 'Order All',
+    'income': 'Income',
+    'myBalance': 'MyBalance',
+    'adwordsBill': 'Adwords Bill'
+  };
+  
+  const categoryLabel = categoryLabels[category] || category;
 
   return (
     <div className={`
